@@ -1,0 +1,225 @@
+-- Made by 2knw aka 2kayen
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+while not player do task.wait() player = Players.LocalPlayer end
+local playerGui = player:WaitForChild("PlayerGui")
+local camera = workspace.CurrentCamera
+
+FOV_RADIUS = 100
+SMOOTHNESS = 0.80
+AIM_ANGLE_OFFSET = 10.5
+AIMBOT_ENABLED = true
+GRAY_SKYBOX_ENABLED = false
+HIDE_TAG_ENABLED = false
+WANTED_ONLY = false
+
+local target = nil
+local MOUSE_LOCKED = false
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "FOVGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local fovCircle = Instance.new("Frame", screenGui)
+fovCircle.Size = UDim2.new(0, FOV_RADIUS*2, 0, FOV_RADIUS*2)
+fovCircle.AnchorPoint = Vector2.new(0.5, 0.5)
+fovCircle.Position = UDim2.new(0.5, 0, 0.5, 0)
+fovCircle.BackgroundColor3 = Color3.fromRGB(0,255,0)
+fovCircle.BackgroundTransparency = 1
+fovCircle.BorderSizePixel = 0
+Instance.new("UICorner", fovCircle).CornerRadius = UDim.new(1,0)
+local uiStroke = Instance.new("UIStroke", fovCircle)
+uiStroke.Name = "FOVStroke"
+uiStroke.Color = Color3.fromRGB(0, 255, 0)
+uiStroke.Thickness = 1
+fovCircle.Visible = AIMBOT_ENABLED
+
+local function isVisible(targetCharacter)
+	if not targetCharacter then return false end
+	local hrp = targetCharacter:FindFirstChild("HumanoidRootPart")
+	if not hrp then return false end
+	local origin = camera.CFrame.Position
+	local direction = hrp.Position - origin
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Blacklist
+	params.FilterDescendantsInstances = {player.Character, targetCharacter}
+	return Workspace:Raycast(origin, direction, params) == nil
+end
+
+local function getClosestInFOV()
+	local closest = nil
+	local shortestDistance = math.huge
+	local screenCenter = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
+	local myTeam = player.Team
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= player and plr.Character then
+			if myTeam and plr.Team == myTeam then continue end
+			local humanoid = plr.Character:FindFirstChildOfClass("Humanoid")
+			local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
+			if humanoid and humanoid.Health > 0 and hrp then
+				if WANTED_ONLY and plr.Team and plr.Team.Name == "Inmates" then
+					local head = plr.Character:FindFirstChild("Head")
+					if head then
+						local bb = head:FindFirstChild("OverheadBBGUI")
+						if bb and bb:IsA("BillboardGui") then
+							local wanted = bb:FindFirstChild("WantedTag")
+							if wanted and wanted:IsA("TextLabel") then
+								if not wanted.Visible then
+									continue
+								end
+							end
+						end
+					end
+				end
+				local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+				if onScreen then
+					local dist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+					if dist < FOV_RADIUS and dist < shortestDistance then
+						if isVisible(plr.Character) then
+							closest = plr
+							shortestDistance = dist
+						end
+					end
+				end
+			end
+		end
+	end
+	return closest
+end
+
+RunService.RenderStepped:Connect(function()
+	if not AIMBOT_ENABLED then
+		if MOUSE_LOCKED then
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+			MOUSE_LOCKED = false
+		end
+		return
+	end
+	target = getClosestInFOV()
+	if target and target.Character then
+		local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			local camPos = camera.CFrame.Position
+			local lookAtHRP = CFrame.new(camPos, hrp.Position)
+			local adjustedCFrame = lookAtHRP * CFrame.Angles(math.rad(-AIM_ANGLE_OFFSET), 0, 0)
+			camera.CFrame = camera.CFrame:Lerp(adjustedCFrame, SMOOTHNESS)
+			if not MOUSE_LOCKED then
+				UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+				MOUSE_LOCKED = true
+			end
+		end
+	else
+		if MOUSE_LOCKED then
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+			MOUSE_LOCKED = false
+		end
+	end
+end)
+
+-- Funções compartilhadas
+function enableGraySkybox()
+	local lighting = game:GetService("Lighting")
+	pcall(function() if lighting:FindFirstChild("GraySky") then lighting.GraySky:Destroy() end end)
+	local sky = Instance.new("Sky", lighting)
+	sky.Name = "GraySky"
+	sky.SkyboxBk = "rbxassetid://154987705"
+	sky.SkyboxDn = "rbxassetid://154987705"
+	sky.SkyboxFt = "rbxassetid://154987705"
+	sky.SkyboxLf = "rbxassetid://154987705"
+	sky.SkyboxRt = "rbxassetid://154987705"
+	sky.SkyboxUp = "rbxassetid://154987705"
+end
+
+function disableGraySkybox()
+	local lighting = game:GetService("Lighting")
+	pcall(function() if lighting:FindFirstChild("GraySky") then lighting.GraySky:Destroy() end end)
+	pcall(function() lighting.Sky = nil end)
+end
+
+function updateTagVisibility()
+	local char = player.Character
+	if not char then return end
+	local head = char:FindFirstChild("Head")
+	if not head then return end
+	for _, name in ipairs({"Hostile", "KillstreakHeadGui", "OverheadBBGUI"}) do
+		local billboard = head:FindFirstChild(name)
+		if billboard and billboard:IsA("BillboardGui") then
+			billboard.Enabled = not HIDE_TAG_ENABLED
+		end
+	end
+end
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if input.KeyCode == Enum.KeyCode.E then
+		AIMBOT_ENABLED = not AIMBOT_ENABLED
+		if _G.updateAimbotState then _G.updateAimbotState() end
+	end
+end)
+
+player.CharacterAdded:Connect(function()
+	camera.CameraType = Enum.CameraType.Custom
+	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+	MOUSE_LOCKED = false
+	if HIDE_TAG_ENABLED then
+		task.wait(0.5)
+		updateTagVisibility()
+	end
+end)
+
+_G.updateSmooth = function(delta)
+	SMOOTHNESS = math.clamp(SMOOTHNESS + delta, 0.01, 1)
+	if _G.smoothValueLabel then
+		_G.smoothValueLabel.Text = string.format("%.2f", SMOOTHNESS)
+	end
+end
+
+_G.updateAngle = function(delta)
+	AIM_ANGLE_OFFSET = math.clamp(AIM_ANGLE_OFFSET + delta, 0, 15)
+	if _G.angleValueLabel then
+		_G.angleValueLabel.Text = string.format("%.1f°", AIM_ANGLE_OFFSET)
+	end
+end
+
+_G.updateFOV = function(delta)
+	FOV_RADIUS = math.clamp(FOV_RADIUS + delta, 30, 500)
+	if _G.fovValueLabel then
+		_G.fovValueLabel.Text = tostring(FOV_RADIUS)
+	end
+	if fovCircle then
+		fovCircle.Size = UDim2.new(0, FOV_RADIUS*2, 0, FOV_RADIUS*2)
+	end
+end
+
+_G.grabUZI = function()
+	local itemsFolder = Workspace:FindFirstChild("Prison_ITEMS")
+	if not itemsFolder then return end
+	
+	local giverFolder = itemsFolder:FindFirstChild("giver")
+	if not giverFolder then return end
+	
+	local targetCFrame = CFrame.new(1842.05945, 156.473984, 2694.41602) * CFrame.new(0, 0, 0, 1, 0, 0, 0, -0.939760566, -0.341833532, 0, 0.341833532, -0.939760566)
+	
+	for _, model in ipairs(giverFolder:GetChildren()) do
+		if model.Name == "UZI" and model:IsA("Model") then
+			if (model:GetPivot().Position - targetCFrame.Position).Magnitude < 0.5 then
+				local clickDetector = model:FindFirstChildOfClass("ClickDetector")
+				if clickDetector then
+					fireclickdetector(clickDetector)
+				end
+				break
+			end
+		end
+	end
+end
+
+local success, result = pcall(function()
+	loadstring(game:HttpGet('https://pastebin.com/raw/YZnL7jaV'))()
+end)
+if not success then warn("Error loading UI: "..tostring(result)) end
