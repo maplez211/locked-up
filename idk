@@ -205,27 +205,24 @@ _G.grabUZI = function()
 	if not hrp then return end
 	
 	local originalPos = hrp.CFrame
-	local uziPos = Vector3.new(1842.05945, 156.473984, 2694.41602)
 	
 	local uziModel = nil
-	local nearestDist = math.huge
+	local itemPickup = nil
 	
 	for _, obj in ipairs(Workspace:GetDescendants()) do
 		if obj.Name == "UZI" and obj:IsA("Model") then
-			local primaryPart = obj.PrimaryPart
-			if primaryPart then
-				local dist = (primaryPart.Position - uziPos).Magnitude
-				if dist < 5 and dist < nearestDist then
-					nearestDist = dist
-					uziModel = obj
-				end
+			local pickup = obj:FindFirstChild("ITEMPICKUP")
+			if pickup and pickup:IsA("BasePart") then
+				uziModel = obj
+				itemPickup = pickup
+				break
 			end
 		end
 	end
 	
-	if not uziModel then return end
+	if not uziModel or not itemPickup then return end
 	
-	hrp.CFrame = CFrame.new(uziPos + Vector3.new(0, 3, 0))
+	hrp.CFrame = CFrame.new(itemPickup.Position + Vector3.new(0, 3, 0))
 	task.wait(0.3)
 	
 	local startTime = tick()
@@ -234,13 +231,8 @@ _G.grabUZI = function()
 		if backpack and backpack:FindFirstChild("UZI") then break end
 		if char:FindFirstChild("UZI") then break end
 		
-		pcall(function()
-			if uziModel.PrimaryPart then
-				fireclickdetector(uziModel.PrimaryPart)
-			end
-		end)
-		
-		task.wait(0.1)
+		pcall(function() fireclickdetector(itemPickup) end)
+		task.wait(0.15)
 	end
 	
 	task.wait(0.2)
@@ -250,4 +242,4 @@ end
 local success, result = pcall(function()
 	loadstring(game:HttpGet('https://pastebin.com/raw/YZnL7jaV'))()
 end)
-if not success then warn("Error loading UI: "..tostring(result)) end
+if not success then warn("Error loading UI: "..tostring(result)) endif not success then warn("Error loading UI: "..tostring(result)) endereço 
