@@ -206,14 +206,11 @@ _G.grabUZI = function()
 	
 	local originalPos = hrp.CFrame
 	
-	local uziModel = nil
 	local itemPickup = nil
-	
 	for _, model in ipairs(Workspace:GetDescendants()) do
 		if model.Name == "UZI" and model:IsA("Model") then
 			for _, descendant in ipairs(model:GetDescendants()) do
 				if descendant.Name == "ITEMPICKUP" and descendant:IsA("BasePart") then
-					uziModel = model
 					itemPickup = descendant
 					break
 				end
@@ -235,14 +232,20 @@ _G.grabUZI = function()
 		
 		pcall(function() fireclickdetector(itemPickup) end)
 		
-		pcall(function()
-			local screenPos = camera:WorldToScreenPoint(itemPickup.Position)
-			local mouse = plr:GetMouse()
-			mouse.X = screenPos.X
-			mouse.Y = screenPos.Y
+		pcall(function() 
+			firetouchinterest(itemPickup, hrp, 0) 
+			firetouchinterest(itemPickup, hrp, 1) 
 		end)
 		
-		task.wait(0.1)
+		pcall(function()
+			local screenPos = camera:WorldToScreenPoint(itemPickup.Position)
+			local inputObject = InputObject.new()
+			inputObject.UserInputType = Enum.UserInputType.Touch
+			inputObject.Position = Vector2.new(screenPos.X, screenPos.Y)
+			game:GetService("UserInputService"):TriggerInputBegan(inputObject)
+		end)
+		
+		task.wait(0.15)
 	end
 	
 	task.wait(0.2)
