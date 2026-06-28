@@ -222,7 +222,7 @@ _G.grabUZI = function()
 	if not itemPickup then return end
 	
 	hrp.CFrame = CFrame.new(itemPickup.Position + Vector3.new(0, 3, 0))
-	task.wait(0.5)
+	task.wait(0.3)
 	
 	local startTime = tick()
 	while tick() - startTime < 3 do
@@ -230,22 +230,34 @@ _G.grabUZI = function()
 		if backpack and backpack:FindFirstChild("UZI") then break end
 		if char:FindFirstChild("UZI") then break end
 		
-		pcall(function() fireclickdetector(itemPickup) end)
+		hrp.CFrame = CFrame.new(itemPickup.Position)
 		
-		pcall(function() 
-			firetouchinterest(itemPickup, hrp, 0) 
-			firetouchinterest(itemPickup, hrp, 1) 
-		end)
+		local screenPos, onScreen = camera:WorldToViewportPoint(itemPickup.Position)
+		if onScreen then
+			pcall(function()
+				local inputObj = Instance.new("InputObject")
+				inputObj.UserInputType = Enum.UserInputType.MouseButton1
+				inputObj.UserInputState = Enum.UserInputState.Begin
+				inputObj.Position = Vector3.new(screenPos.X, screenPos.Y, 0)
+				UserInputService:TriggerInputBegan(inputObj)
+				task.wait(0.05)
+				inputObj.UserInputState = Enum.UserInputState.End
+				UserInputService:TriggerInputEnded(inputObj)
+			end)
+			
+			pcall(function()
+				local touchInput = Instance.new("InputObject")
+				touchInput.UserInputType = Enum.UserInputType.Touch
+				touchInput.UserInputState = Enum.UserInputState.Begin
+				touchInput.Position = Vector3.new(screenPos.X, screenPos.Y, 0)
+				UserInputService:TriggerInputBegan(touchInput)
+				task.wait(0.05)
+				touchInput.UserInputState = Enum.UserInputState.End
+				UserInputService:TriggerInputEnded(touchInput)
+			end)
+		end
 		
-		pcall(function()
-			local screenPos = camera:WorldToScreenPoint(itemPickup.Position)
-			local inputObject = InputObject.new()
-			inputObject.UserInputType = Enum.UserInputType.Touch
-			inputObject.Position = Vector2.new(screenPos.X, screenPos.Y)
-			game:GetService("UserInputService"):TriggerInputBegan(inputObject)
-		end)
-		
-		task.wait(0.15)
+		task.wait(0.2)
 	end
 	
 	task.wait(0.2)
