@@ -210,28 +210,11 @@ _G.grabUZI = function()
 	local uziModel = nil
 	local nearestDist = math.huge
 	
-	local itemsFolder = Workspace:FindFirstChild("Prison_ITEMS")
-	if itemsFolder then
-		local giverFolder = itemsFolder:FindFirstChild("giver")
-		if giverFolder then
-			for _, model in ipairs(giverFolder:GetChildren()) do
-				if model.Name == "UZI" and model:IsA("Model") then
-					local modelPos = model:GetBoundingBox() and model:GetBoundingBox().Position or model:GetPivot().Position
-					local dist = (modelPos - uziPos).Magnitude
-					if dist < 5 and dist < nearestDist then
-						nearestDist = dist
-						uziModel = model
-					end
-				end
-			end
-		end
-	end
-	
-	if not uziModel then
-		for _, obj in ipairs(Workspace:GetDescendants()) do
-			if obj.Name == "UZI" and obj:IsA("Model") then
-				local modelPos = obj:GetBoundingBox() and obj:GetBoundingBox().Position or obj:GetPivot().Position
-				local dist = (modelPos - uziPos).Magnitude
+	for _, obj in ipairs(Workspace:GetDescendants()) do
+		if obj.Name == "UZI" and obj:IsA("Model") then
+			local primaryPart = obj.PrimaryPart
+			if primaryPart then
+				local dist = (primaryPart.Position - uziPos).Magnitude
 				if dist < 5 and dist < nearestDist then
 					nearestDist = dist
 					uziModel = obj
@@ -251,18 +234,9 @@ _G.grabUZI = function()
 		if backpack and backpack:FindFirstChild("UZI") then break end
 		if char:FindFirstChild("UZI") then break end
 		
-		pcall(function() 
-			for _, d in ipairs(uziModel:GetDescendants()) do
-				if d:IsA("ClickDetector") then
-					fireclickdetector(d)
-				end
-			end
-		end)
-		
 		pcall(function()
-			local pp = uziModel.PrimaryPart
-			if pp and pp:IsA("BasePart") then
-				fireclickdetector(pp)
+			if uziModel.PrimaryPart then
+				fireclickdetector(uziModel.PrimaryPart)
 			end
 		end)
 		
