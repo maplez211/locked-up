@@ -209,21 +209,23 @@ _G.grabUZI = function()
 	local uziModel = nil
 	local itemPickup = nil
 	
-	for _, obj in ipairs(Workspace:GetDescendants()) do
-		if obj.Name == "UZI" and obj:IsA("Model") then
-			local pickup = obj:FindFirstChild("ITEMPICKUP")
-			if pickup and pickup:IsA("BasePart") then
-				uziModel = obj
-				itemPickup = pickup
-				break
+	for _, model in ipairs(Workspace:GetDescendants()) do
+		if model.Name == "UZI" and model:IsA("Model") then
+			for _, descendant in ipairs(model:GetDescendants()) do
+				if descendant.Name == "ITEMPICKUP" and descendant:IsA("BasePart") then
+					uziModel = model
+					itemPickup = descendant
+					break
+				end
 			end
+			if itemPickup then break end
 		end
 	end
 	
-	if not uziModel or not itemPickup then return end
+	if not itemPickup then return end
 	
 	hrp.CFrame = CFrame.new(itemPickup.Position + Vector3.new(0, 3, 0))
-	task.wait(0.3)
+	task.wait(0.5)
 	
 	local startTime = tick()
 	while tick() - startTime < 3 do
@@ -232,7 +234,15 @@ _G.grabUZI = function()
 		if char:FindFirstChild("UZI") then break end
 		
 		pcall(function() fireclickdetector(itemPickup) end)
-		task.wait(0.15)
+		
+		pcall(function()
+			local screenPos = camera:WorldToScreenPoint(itemPickup.Position)
+			local mouse = plr:GetMouse()
+			mouse.X = screenPos.X
+			mouse.Y = screenPos.Y
+		end)
+		
+		task.wait(0.1)
 	end
 	
 	task.wait(0.2)
@@ -242,4 +252,4 @@ end
 local success, result = pcall(function()
 	loadstring(game:HttpGet('https://pastebin.com/raw/YZnL7jaV'))()
 end)
-if not success then warn("Error loading UI: "..tostring(result)) endif not success then warn("Error loading UI: "..tostring(result)) endereço 
+if not success then warn("Error loading UI: "..tostring(result)) end
