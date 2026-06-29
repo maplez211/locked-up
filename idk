@@ -1,5 +1,4 @@
--- Made by 2knw aka 2kayen
-
+-- Main Script (Locked Up)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -17,6 +16,7 @@ AIMBOT_ENABLED = true
 GRAY_SKYBOX_ENABLED = false
 HIDE_TAG_ENABLED = false
 WANTED_ONLY = false
+TARGET_UI_ENABLED = true
 
 local target = nil
 local MOUSE_LOCKED = false
@@ -211,6 +211,8 @@ end
 
 -- ============ TARGET INFO UPDATE FUNCTION ============
 _G.updateTargetInfo = function(targetPlayer)
+	if not TARGET_UI_ENABLED then return end  
+	
 	local targetInfoFrame = playerGui:FindFirstChild("TargetInfoGui") and playerGui.TargetInfoGui:FindFirstChild("TargetInfoFrame")
 	if not targetInfoFrame then return end
 	
