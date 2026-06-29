@@ -108,6 +108,7 @@ RunService.RenderStepped:Connect(function()
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 			MOUSE_LOCKED = false
 		end
+		_G.updateTargetInfo(nil)
 		return
 	end
 	target = getClosestInFOV()
@@ -123,11 +124,13 @@ RunService.RenderStepped:Connect(function()
 				MOUSE_LOCKED = true
 			end
 		end
+		_G.updateTargetInfo(target)
 	else
 		if MOUSE_LOCKED then
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 			MOUSE_LOCKED = false
 		end
+		_G.updateTargetInfo(nil)
 	end
 end)
 
@@ -206,6 +209,74 @@ _G.updateFOV = function(delta)
 	end
 end
 
+-- ============ TARGET INFO UPDATE FUNCTION ============
+_G.updateTargetInfo = function(targetPlayer)
+	local targetInfoFrame = playerGui:FindFirstChild("TargetInfoGui") and playerGui.TargetInfoGui:FindFirstChild("TargetInfoFrame")
+	if not targetInfoFrame then return end
+	
+	if not targetPlayer or not targetPlayer.Character then
+		targetInfoFrame.Visible = false
+		return
+	end
+	
+	local char = targetPlayer.Character
+	local humanoid = char:FindFirstChildOfClass("Humanoid")
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if not humanoid or not hrp then
+		targetInfoFrame.Visible = false
+		return
+	end
+	
+	targetInfoFrame.Visible = true
+	
+	local headshotImage = targetInfoFrame:FindFirstChild("Headshot")
+	local usernameLabel = targetInfoFrame:FindFirstChild("Username")
+	local healthLabel = targetInfoFrame:FindFirstChild("Health")
+	local distanceLabel = targetInfoFrame:FindFirstChild("Distance")
+	local healthBarFill = targetInfoFrame:FindFirstChild("HealthBarBg") and targetInfoFrame.HealthBarBg:FindFirstChild("HealthBarFill")
+	
+	if headshotImage then
+		headshotImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. targetPlayer.UserId .. "&w=48&h=48&f=png"
+	end
+	if usernameLabel then
+		usernameLabel.Text = targetPlayer.Name
+	end
+	
+	local health, maxHealth = math.floor(humanoid.Health), math.floor(humanoid.MaxHealth)
+	local hp = health / maxHealth
+	
+	if healthLabel then
+		healthLabel.Text = health .. "/" .. maxHealth
+		if hp > 0.6 then
+			healthLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+		elseif hp > 0.3 then
+			healthLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+		else
+			healthLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+		end
+	end
+	
+	if healthBarFill then
+		if hp > 0.6 then
+			healthBarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+		elseif hp > 0.3 then
+			healthBarFill.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+		else
+			healthBarFill.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+		end
+		healthBarFill.Size = UDim2.new(hp, 0, 1, 0)
+	end
+	
+	if distanceLabel then
+		local myChar = player.Character
+		if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+			local dist = (myChar.HumanoidRootPart.Position - hrp.Position).Magnitude
+			distanceLabel.Text = string.format("%.0f studs", dist)
+		else
+			distanceLabel.Text = "? studs"
+		end
+	end
+end
 
 local success, result = pcall(function()
 	loadstring(game:HttpGet('https://pastebin.com/raw/YZnL7jaV'))()
