@@ -276,6 +276,18 @@ _G.updateTargetInfo = function(targetPlayer)
 			distanceLabel.Text = "? studs"
 		end
 	end
+	
+	local toolLabel = targetInfoFrame:FindFirstChild("Tool")
+	if toolLabel then
+		local tool = char:FindFirstChildOfClass("Tool")
+		if tool then
+			toolLabel.Text = "Tool: " .. tool.Name
+			toolLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+		else
+			toolLabel.Text = "Tool: None"
+			toolLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+		end
+	end
 end
 
 local success, result = pcall(function()
