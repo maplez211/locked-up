@@ -17,6 +17,7 @@ GRAY_SKYBOX_ENABLED = false
 HIDE_TAG_ENABLED = false
 WANTED_ONLY = false
 TARGET_UI_ENABLED = true
+IGNORE_FRIENDS = true
 
 local target = nil
 local MOUSE_LOCKED = false
@@ -59,6 +60,10 @@ local function getClosestInFOV()
 	local myTeam = player.Team
 	for _, plr in ipairs(Players:GetPlayers()) do
 		if plr ~= player and plr.Character then
+			if IGNORE_FRIENDS and player:IsFriendsWith(plr.UserId) then
+				continue
+			end
+			
 			if myTeam and plr.Team == myTeam then continue end
 			
 			if myTeam then
