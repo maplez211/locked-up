@@ -18,9 +18,10 @@ HIDE_TAG_ENABLED = false
 WANTED_ONLY = false
 TARGET_UI_ENABLED = true
 IGNORE_FRIENDS = true
-
-local target = nil
 local MOUSE_LOCKED = false
+
+TARGET_ON_PLAYER = nil  
+local target = nil
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FOVGui"
@@ -54,6 +55,39 @@ local function isVisible(targetCharacter)
 end
 
 local function getClosestInFOV()
+	if TARGET_ON_PLAYER then
+		local targetPlr = Players:FindFirstChild(TARGET_ON_PLAYER)
+		if targetPlr and targetPlr.Character then
+			local humanoid = targetPlr.Character:FindFirstChildOfClass("Humanoid")
+			local hrp = targetPlr.Character:FindFirstChild("HumanoidRootPart")
+			if humanoid and humanoid.Health > 0 and hrp then
+				if WANTED_ONLY and targetPlr.Team and targetPlr.Team.Name == "Inmates" then
+					local head = targetPlr.Character:FindFirstChild("Head")
+					if head then
+						local bb = head:FindFirstChild("OverheadBBGUI")
+						if bb and bb:IsA("BillboardGui") then
+							local wanted = bb:FindFirstChild("WantedTag")
+							if wanted and wanted:IsA("TextLabel") then
+								if not wanted.Visible then
+									return nil
+								end
+							else
+								return nil
+							end
+						else
+							return nil
+						end
+					end
+				end
+				local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+				if onScreen and isVisible(targetPlr.Character) then
+					return targetPlr
+				end
+			end
+		end
+		return nil
+	end
+
 	local closest = nil
 	local shortestDistance = math.huge
 	local screenCenter = Vector2.new(camera.ViewportSize.X/2, camera.ViewportSize.Y/2)
@@ -293,6 +327,44 @@ _G.updateTargetInfo = function(targetPlayer)
 		else
 			toolLabel.Text = "Tool: None"
 			toolLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+		end
+	end
+end
+
+_G.refreshTargetOnList = function(dropdownFrame)
+	for _, child in ipairs(dropdownFrame:GetChildren()) do
+		if child:IsA("TextButton") then child:Destroy() end
+	end
+	
+	local noneBtn = Instance.new("TextButton", dropdownFrame)
+	noneBtn.Size = UDim2.new(1, 0, 0, 22)
+	noneBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	noneBtn.Text = "None"
+	noneBtn.Font = Enum.Font.Gotham
+	noneBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+	noneBtn.TextSize = 10
+	noneBtn.BorderSizePixel = 0
+	noneBtn.MouseButton1Click:Connect(function()
+		TARGET_ON_PLAYER = nil
+		dropdownFrame.Parent.Visible = false
+		_G.targetOnLabel.Text = "Target On: None"
+	end)
+	
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= player then
+			local plrBtn = Instance.new("TextButton", dropdownFrame)
+			plrBtn.Size = UDim2.new(1, 0, 0, 22)
+			plrBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+			plrBtn.Text = plr.Name
+			plrBtn.Font = Enum.Font.Gotham
+			plrBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+			plrBtn.TextSize = 10
+			plrBtn.BorderSizePixel = 0
+			plrBtn.MouseButton1Click:Connect(function()
+				TARGET_ON_PLAYER = plr.Name
+				dropdownFrame.Parent.Visible = false
+				_G.targetOnLabel.Text = "Target On: " .. plr.Name
+			end)
 		end
 	end
 end
