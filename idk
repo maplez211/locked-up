@@ -223,7 +223,7 @@ player.CharacterAdded:Connect(function()
 		updateTagVisibility()
 	end
 	if ESP_ENABLED then
-		task.wait(0.5)
+		task.wait(1)
 		_G.updateESP()
 	end
 end)
@@ -361,100 +361,62 @@ _G.setTargetOnPlayer = function(partialName)
 end
 
 -- ============ ESP FUNCTION ============
-local espFolder = Instance.new("Folder", playerGui)
-espFolder.Name = "ESPFolder"
-
 _G.updateESP = function()
-	espFolder:ClearAllChildren()
-	
-	if not ESP_ENABLED then return end
+	if not ESP_ENABLED then
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= player and plr.Character then
+				local highlight = plr.Character:FindFirstChild("ESPHighlight")
+				if highlight then highlight:Destroy() end
+				local head = plr.Character:FindFirstChild("Head")
+				if head then
+					local billboard = head:FindFirstChild("ESPNameTag")
+					if billboard then billboard:Destroy() end
+				end
+			end
+		end
+		return
+	end
 	
 	for _, plr in ipairs(Players:GetPlayers()) do
 		if plr ~= player and plr.Character then
 			local char = plr.Character
 			local humanoid = char:FindFirstChildOfClass("Humanoid")
-			local hrp = char:FindFirstChild("HumanoidRootPart")
-			local head = char:FindFirstChild("Head")
-			if not humanoid or humanoid.Health <= 0 or not hrp or not head then continue end
+			if not humanoid or humanoid.Health <= 0 then continue end
 			
-			local box = Instance.new("Frame", espFolder)
-			box.BackgroundTransparency = 1
-			box.Size = UDim2.new(0, 0, 0, 0)
-			box.Position = UDim2.new(0, 0, 0, 0)
-			box.BorderSizePixel = 0
-			box.Name = plr.Name
-			
-			for i = 1, 4 do
-				local line = Instance.new("Frame", box)
-				line.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-				line.BorderSizePixel = 0
-				line.Name = "Line" .. i
+			local highlight = char:FindFirstChild("ESPHighlight")
+			if not highlight then
+				highlight = Instance.new("Highlight", char)
+				highlight.Name = "ESPHighlight"
+				highlight.FillColor = Color3.fromRGB(255, 0, 0)
+				highlight.FillTransparency = 0.5
+				highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+				highlight.OutlineTransparency = 0
 			end
 			
-			local nameLabel = Instance.new("TextLabel", box)
-			nameLabel.BackgroundTransparency = 1
-			nameLabel.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
-			nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-			nameLabel.Font = Enum.Font.GothamBold
-			nameLabel.TextSize = 12
-			nameLabel.TextStrokeTransparency = 0
-			nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-			nameLabel.Size = UDim2.new(0, 200, 0, 18)
-			nameLabel.Position = UDim2.new(0.5, 0, 0, -22)
-			nameLabel.AnchorPoint = Vector2.new(0.5, 0)
+			local head = char:FindFirstChild("Head")
+			if head then
+				local billboard = head:FindFirstChild("ESPNameTag")
+				if not billboard then
+					billboard = Instance.new("BillboardGui", head)
+					billboard.Name = "ESPNameTag"
+					billboard.Size = UDim2.new(0, 200, 0, 30)
+					billboard.StudsOffset = Vector3.new(0, 1.5, 0)
+					billboard.AlwaysOnTop = true
+					
+					local label = Instance.new("TextLabel", billboard)
+					label.BackgroundTransparency = 1
+					label.Size = UDim2.new(1, 0, 1, 0)
+					label.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
+					label.TextColor3 = Color3.fromRGB(255, 255, 255)
+					label.Font = Enum.Font.GothamBold
+					label.TextSize = 12
+					label.TextStrokeTransparency = 0
+					label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+				end
+			end
 		end
 	end
 end
-
-RunService.RenderStepped:Connect(function()
-	if not ESP_ENABLED then return end
-	
-	for _, box in ipairs(espFolder:GetChildren()) do
-		if not box:IsA("Frame") then continue end
-		
-		local targetPlr = Players:FindFirstChild(box.Name)
-		if not targetPlr or not targetPlr.Character then
-			box:Destroy()
-			continue
-		end
-		
-		local char = targetPlr.Character
-		local hrp = char:FindFirstChild("HumanoidRootPart")
-		local head = char:FindFirstChild("Head")
-		if not hrp or not head then
-			box.Visible = false
-			continue
-		end
-		
-		local rootPos, rootOnScreen = camera:WorldToViewportPoint(hrp.Position)
-		local headPos = head.Position + Vector3.new(0, 0.5, 0)
-		local _, headOnScreen = camera:WorldToViewportPoint(headPos)
-		
-		if rootOnScreen then
-			local topY = headOnScreen.Y
-			local bottomY = rootPos.Y
-			local height = math.abs(topY - bottomY)
-			local width = height * 0.55
-			local x = rootPos.X
-			local y = topY
-			
-			box.Visible = true
-			box.Position = UDim2.new(0, x - width/2, 0, y)
-			box.Size = UDim2.new(0, width, 0, height)
-			
-			local line1 = box:FindFirstChild("Line1")
-			if line1 then line1.Size = UDim2.new(1, 0, 0, 1) line1.Position = UDim2.new(0, 0, 0, 0) end
-			local line2 = box:FindFirstChild("Line2")
-			if line2 then line2.Size = UDim2.new(1, 0, 0, 1) line2.Position = UDim2.new(0, 0, 1, -1) end
-			local line3 = box:FindFirstChild("Line3")
-			if line3 then line3.Size = UDim2.new(0, 1, 1, 0) line3.Position = UDim2.new(0, 0, 0, 0) end
-			local line4 = box:FindFirstChild("Line4")
-			if line4 then line4.Size = UDim2.new(0, 1, 1, 0) line4.Position = UDim2.new(1, -1, 0, 0) end
-		else
-			box.Visible = false
-		end
-	end
-end)
 
 _G.refreshESP = function()
 	_G.updateESP()
