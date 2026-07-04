@@ -460,6 +460,10 @@ _G.refreshESP = function()
 	_G.updateESP()
 end
 
+if ESP_ENABLED then
+	_G.updateESP()
+end
+
 local success, result = pcall(function()
 	loadstring(game:HttpGet('https://pastebin.com/raw/YZnL7jaV'))()
 end)
