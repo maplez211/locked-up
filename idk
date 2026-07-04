@@ -14,6 +14,7 @@ local camera = workspace.CurrentCamera
 FOV_RADIUS = 100
 SMOOTHNESS = 0.80
 AIM_ANGLE_OFFSET = 10.5
+PLAYER_FOV = 70 
 AIMBOT_ENABLED = true
 GRAY_SKYBOX_ENABLED = false
 HIDE_TAG_ENABLED = false
@@ -28,8 +29,8 @@ TARGET_ON_PLAYER = nil
 
 -- ============ REDZ WINDOW ============
 local Window = redzlib:MakeWindow({
-  Title = "Hax do 2knw| Locked Up Panel",
-  SubTitle = "by 2knw a.k.a 2kayen",
+  Title = "H4X do 2knw | Locked Up Panel",
+  SubTitle = "by 2knw | Version 0.1.1",
   SaveFolder = "LockedUp_Hub"
 })
 
@@ -298,13 +299,13 @@ for _, plr in ipairs(Players:GetPlayers()) do
 	end
 end
 
--- ============ REDZ TABS ============
+-- ============ TABS ============
+local MainTab = Window:MakeTab({"Main", "settings"})
 local AimbotTab = Window:MakeTab({"Aimbot", "crosshair"})
 local VisualsTab = Window:MakeTab({"Visuals", "eye"})
 local TeleportsTab = Window:MakeTab({"Teleports", "map-pin"})
-local MainTab = Window:MakeTab({"Main", "settings"})
 
-Window:SelectTab(AimbotTab)
+Window:SelectTab(MainTab)
 
 -- ============ AIMBOT TAB ============
 local AimbotSection = AimbotTab:AddSection({"Aimbot Functions"})
@@ -430,24 +431,40 @@ VisualsTab:AddToggle({
 local TeleportsSection = TeleportsTab:AddSection({"Prison Teleports"})
 
 local teleports = {
+  {"Escape the Prison", Vector3.new(2025, 95, 2763)},
+  {"Admin Room", Vector3.new(825, 127, 3762)},
+  {"Cafeteria", Vector3.new(1958, 156, 2684)},
+  {"Crafting", Vector3.new(1976, 156, 2822)},
+  {"Kitchen", Vector3.new(1895, 158, 2659)},
+  {"Armory 1 (Prison)", Vector3.new(1841, 165, 2674)},
+  {"Break Room 1", Vector3.new(1820, 156, 2688)},
+  {"Break Room 2", Vector3.new(1801, 156, 2654)},
+  {"Warden Room", Vector3.new(1700, 156, 2810)},
+  {"Front Entrance", Vector3.new(1682, 156, 2693)},
+  {"Roof", Vector3.new(1794, 180, 2789)},
+  {"Prison Tower 1 (M82)", Vector3.new(1531, 186, 2731)},
+  {"Prison Tower 2", Vector3.new(1849, 186, 3006)},
+  {"Front Yard", Vector3.new(1848, 154, 2897)},
+  {"Back Yard", Vector3.new(2051, 154, 2844)},
   {"Cells 1", Vector3.new(2035, 156, 2734)},
   {"Cells 2", Vector3.new(1942, 192, 2713)},
-  {"Armory 1 (Prison)", Vector3.new(1841, 165, 2674)},
+  {"Sewage", Vector3.new(1944, 136, 2557)},
   {"Armory 2 (Prison)", Vector3.new(2236, 165, 2719)},
-  {"Prison Tower 1", Vector3.new(1531, 186, 2731)},
-  {"Prison Tower 2", Vector3.new(1849, 186, 3006)},
-  {"Cafeteria", Vector3.new(1958, 156, 2684)},
-  {"Front Entrance", Vector3.new(1682, 156, 2693)},
+  {"Hall 1", Vector3.new(2259, 155, 2685)},
   {"Back Entrance", Vector3.new(2363, 155, 2718)},
   {"Lootboxes Area", Vector3.new(2325, 156, 2908)},
-  {"Roof", Vector3.new(1794, 180, 2789)},
-  {"Main Yard", Vector3.new(1848, 154, 2897)},
-  {"Back Yard", Vector3.new(2051, 154, 2844)},
-  {"Armory (City)", Vector3.new(1449, 67, 1530)},
   {"Criminal Base 1", Vector3.new(77, 168, 2455)},
   {"Criminal Base 2", Vector3.new(57, 135, 870)},
   {"Criminal Base 3", Vector3.new(1589, 76, 1369)},
-  {"Escape the Prison", Vector3.new(1462, 172, 2720)},
+  {"Armory (City)", Vector3.new(1449, 67, 1530)},
+  {"Wood House (DB and Desert Eagle)", Vector3.new(1173, 213, 3309)},
+  {"Beach (Agent Vest)", Vector3.new(-189, 115, 1762)},
+  {"Bell Tower (M82)", Vector3.new(762, 173, 2307)},
+  {"Empty Grocery", Vector3.new(503, 110, 2085)},
+  {"Empty Building (DB)", Vector3.new(768, 110, 2398)},
+  {"Gym", Vector3.new(247, 110, 1729)},
+  {"Walpark", Vector3.new(397, 110, 1931)},
+  {"Motel", Vector3.new(206, 142, 989)},
 }
 
 for _, tp in ipairs(teleports) do
@@ -460,7 +477,27 @@ for _, tp in ipairs(teleports) do
 end
 
 -- ============ MAIN TAB ============
+MainTab:AddDiscordInvite({
+    Name = "H4X do 2knw",
+    Description = "Join our Discord server for updates and support!",
+    Logo = "rbxassetid://121222457209872",
+    Invite = "https://discord.gg/YqVunAY8J2",  
+})
+
 local MainSection = MainTab:AddSection({"Main Functions"})
+
+MainTab:AddSlider({
+  Name = "Player FOV",
+  Description = "Changes your field of view (60-120)",
+  Min = 60,
+  Max = 120,
+  Increase = 1,
+  Default = 70,
+  Callback = function(Value)
+    PLAYER_FOV = Value
+    camera.FieldOfView = Value
+  end
+})
 
 -- ============ PLAYER EVENTS ============
 UserInputService.InputBegan:Connect(function(input, processed)
@@ -475,19 +512,23 @@ player.CharacterAdded:Connect(function()
   camera.CameraType = Enum.CameraType.Custom
   UserInputService.MouseBehavior = Enum.MouseBehavior.Default
   MOUSE_LOCKED = false
-  if HIDE_TAG_ENABLED then
-    task.wait(0.5)
-    updateTagVisibility()
-    task.wait(1)
-    updateTagVisibility()
-  end
+  camera.FieldOfView = PLAYER_FOV
   if ESP_ENABLED then
     task.wait(0.5)
     _G.updateESP()
   end
 end)
 
+camera.FieldOfView = PLAYER_FOV
+
+task.spawn(function()
+  while task.wait(1) do
+    if HIDE_TAG_ENABLED then
+      updateTagVisibility()
+    end
+  end
+end)
+
 if player.Character and HIDE_TAG_ENABLED then
-  task.wait(0.5)
   updateTagVisibility()
 end
