@@ -19,6 +19,7 @@ WANTED_ONLY = false
 TARGET_UI_ENABLED = true
 IGNORE_FRIENDS = true
 local MOUSE_LOCKED = false
+ESP_ENABLED = false
 
 TARGET_ON_PLAYER = nil  
 local target = nil
@@ -221,6 +222,10 @@ player.CharacterAdded:Connect(function()
 		task.wait(0.5)
 		updateTagVisibility()
 	end
+	if ESP_ENABLED then
+		task.wait(0.5)
+		_G.refreshESP()
+	end
 end)
 
 _G.updateSmooth = function(delta)
@@ -353,6 +358,102 @@ _G.setTargetOnPlayer = function(partialName)
 	if _G.targetOnLabel then
 		_G.targetOnLabel.Text = "Target On: None (not found)"
 	end
+end
+
+-- ============ ESP FUNCTION ============
+local espFolder = Instance.new("Folder", playerGui)
+espFolder.Name = "ESPFolder"
+
+_G.updateESP = function()
+	espFolder:ClearAllChildren()
+	
+	if not ESP_ENABLED then return end
+	
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= player and plr.Character then
+			local char = plr.Character
+			local humanoid = char:FindFirstChildOfClass("Humanoid")
+			local hrp = char:FindFirstChild("HumanoidRootPart")
+			local head = char:FindFirstChild("Head")
+			if not humanoid or humanoid.Health <= 0 or not hrp or not head then continue end
+			
+			local box = Instance.new("Frame", espFolder)
+			box.BackgroundTransparency = 1
+			box.Size = UDim2.new(0, 0, 0, 0)
+			box.Position = UDim2.new(0, 0, 0, 0)
+			box.BorderSizePixel = 0
+			
+			for i = 1, 4 do
+				local line = Instance.new("Frame", box)
+				line.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+				line.BorderSizePixel = 0
+				line.Name = "Line" .. i
+			end
+			
+			local nameLabel = Instance.new("TextLabel", box)
+			nameLabel.BackgroundTransparency = 1
+			nameLabel.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
+			nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			nameLabel.Font = Enum.Font.GothamBold
+			nameLabel.TextSize = 12
+			nameLabel.TextStrokeTransparency = 0
+			nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+			nameLabel.Size = UDim2.new(0, 200, 0, 18)
+			nameLabel.Position = UDim2.new(0.5, 0, 0, -22)
+			nameLabel.AnchorPoint = Vector2.new(0.5, 0)
+			
+			coroutine.wrap(function()
+				while char and char.Parent and hrp.Parent and ESP_ENABLED do
+					local rootPos, rootOnScreen = camera:WorldToViewportPoint(hrp.Position)
+					local headPos = head.Position + Vector3.new(0, 0.5, 0)
+					local headOnScreen = camera:WorldToViewportPoint(headPos)
+					
+					if rootOnScreen then
+						local topY = headOnScreen.Y
+						local bottomY = rootPos.Y
+						local height = math.abs(topY - bottomY)
+						local width = height * 0.55
+						local x = rootPos.X
+						local y = topY
+						
+						box.Visible = true
+						box.Position = UDim2.new(0, x - width/2, 0, y)
+						box.Size = UDim2.new(0, width, 0, height)
+						
+						local line1 = box:FindFirstChild("Line1")
+						if line1 then
+							line1.Size = UDim2.new(1, 0, 0, 1)
+							line1.Position = UDim2.new(0, 0, 0, 0)
+						end
+						local line2 = box:FindFirstChild("Line2")
+						if line2 then
+							line2.Size = UDim2.new(1, 0, 0, 1)
+							line2.Position = UDim2.new(0, 0, 1, -1)
+						end
+						local line3 = box:FindFirstChild("Line3")
+						if line3 then
+							line3.Size = UDim2.new(0, 1, 1, 0)
+							line3.Position = UDim2.new(0, 0, 0, 0)
+						end
+						local line4 = box:FindFirstChild("Line4")
+						if line4 then
+							line4.Size = UDim2.new(0, 1, 1, 0)
+							line4.Position = UDim2.new(1, -1, 0, 0)
+						end
+					else
+						box.Visible = false
+					end
+					
+					RunService.RenderStepped:Wait()
+				end
+				box:Destroy()
+			end)()
+		end
+	end
+end
+
+_G.refreshESP = function()
+	_G.updateESP()
 end
 
 local success, result = pcall(function()
