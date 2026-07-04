@@ -1,4 +1,6 @@
--- Main Script (Locked Up)
+-- Main Script (Locked Up) - Redz Library
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -18,12 +20,25 @@ HIDE_TAG_ENABLED = false
 WANTED_ONLY = false
 TARGET_UI_ENABLED = true
 IGNORE_FRIENDS = true
-local MOUSE_LOCKED = false
 ESP_ENABLED = false
-
-TARGET_ON_PLAYER = nil  
+ESP_NAMES_ENABLED = true  
+local MOUSE_LOCKED = false
 local target = nil
+TARGET_ON_PLAYER = nil
 
+-- ============ REDZ WINDOW ============
+local Window = redzlib:MakeWindow({
+  Title = "Hax do 2knw| Locked Up Panel",
+  SubTitle = "by 2knw a.k.a 2kayen",
+  SaveFolder = "LockedUp_Hub"
+})
+
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://121222457209872", BackgroundTransparency = 1 },
+    Corner = { CornerRadius = UDim.new(35, 1) },
+})
+
+-- ============ FOV CIRCLE ============
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "FOVGui"
 screenGui.ResetOnSpawn = false
@@ -37,12 +52,11 @@ fovCircle.BackgroundColor3 = Color3.fromRGB(0,255,0)
 fovCircle.BackgroundTransparency = 1
 fovCircle.BorderSizePixel = 0
 Instance.new("UICorner", fovCircle).CornerRadius = UDim.new(1,0)
-local uiStroke = Instance.new("UIStroke", fovCircle)
-uiStroke.Name = "FOVStroke"
-uiStroke.Color = Color3.fromRGB(0, 255, 0)
-uiStroke.Thickness = 1
+Instance.new("UIStroke", fovCircle).Color = Color3.fromRGB(0, 255, 0)
+fovCircle.UIStroke.Thickness = 1
 fovCircle.Visible = AIMBOT_ENABLED
 
+-- ============ MAIN FUNCTIONS ============
 local function isVisible(targetCharacter)
 	if not targetCharacter then return false end
 	local hrp = targetCharacter:FindFirstChild("HumanoidRootPart")
@@ -69,21 +83,13 @@ local function getClosestInFOV()
 						if bb and bb:IsA("BillboardGui") then
 							local wanted = bb:FindFirstChild("WantedTag")
 							if wanted and wanted:IsA("TextLabel") then
-								if not wanted.Visible then
-									return nil
-								end
-							else
-								return nil
-							end
-						else
-							return nil
-						end
+								if not wanted.Visible then return nil end
+							else return nil end
+						else return nil end
 					end
 				end
 				local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
-				if onScreen and isVisible(targetPlr.Character) then
-					return targetPlr
-				end
+				if onScreen and isVisible(targetPlr.Character) then return targetPlr end
 			end
 		end
 		return nil
@@ -95,10 +101,7 @@ local function getClosestInFOV()
 	local myTeam = player.Team
 	for _, plr in ipairs(Players:GetPlayers()) do
 		if plr ~= player and plr.Character then
-			if IGNORE_FRIENDS and player:IsFriendsWith(plr.UserId) then
-				continue
-			end
-			
+			if IGNORE_FRIENDS and player:IsFriendsWith(plr.UserId) then continue end
 			if myTeam and plr.Team == myTeam then continue end
 			
 			if myTeam then
@@ -119,9 +122,7 @@ local function getClosestInFOV()
 						if bb and bb:IsA("BillboardGui") then
 							local wanted = bb:FindFirstChild("WantedTag")
 							if wanted and wanted:IsA("TextLabel") then
-								if not wanted.Visible then
-									continue
-								end
+								if not wanted.Visible then continue end
 							end
 						end
 					end
@@ -148,7 +149,6 @@ RunService.RenderStepped:Connect(function()
 			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 			MOUSE_LOCKED = false
 		end
-		_G.updateTargetInfo(nil)
 		return
 	end
 	target = getClosestInFOV()
@@ -164,16 +164,10 @@ RunService.RenderStepped:Connect(function()
 				MOUSE_LOCKED = true
 			end
 		end
-		_G.updateTargetInfo(target)
-	else
-		if MOUSE_LOCKED then
-			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-			MOUSE_LOCKED = false
-		end
-		_G.updateTargetInfo(nil)
 	end
 end)
 
+-- ============ SHARED FUNCTIONS ============
 function enableGraySkybox()
 	local lighting = game:GetService("Lighting")
 	pcall(function() if lighting:FindFirstChild("GraySky") then lighting.GraySky:Destroy() end end)
@@ -206,234 +200,293 @@ function updateTagVisibility()
 	end
 end
 
-UserInputService.InputBegan:Connect(function(input, processed)
-	if processed then return end
-	if input.KeyCode == Enum.KeyCode.E then
-		AIMBOT_ENABLED = not AIMBOT_ENABLED
-		if _G.updateAimbotState then _G.updateAimbotState() end
-	end
-end)
-
-player.CharacterAdded:Connect(function()
-	camera.CameraType = Enum.CameraType.Custom
-	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-	MOUSE_LOCKED = false
-	if HIDE_TAG_ENABLED then
-		task.wait(0.5)
-		updateTagVisibility()
-	end
-	if ESP_ENABLED then
-		task.wait(1)
-		_G.updateESP()
-	end
-end)
-
-_G.updateSmooth = function(delta)
-	SMOOTHNESS = math.clamp(SMOOTHNESS + delta, 0.01, 1)
-	if _G.smoothValueLabel then
-		_G.smoothValueLabel.Text = string.format("%.2f", SMOOTHNESS)
-	end
-end
-
-_G.updateAngle = function(delta)
-	AIM_ANGLE_OFFSET = math.clamp(AIM_ANGLE_OFFSET + delta, 0, 15)
-	if _G.angleValueLabel then
-		_G.angleValueLabel.Text = string.format("%.1f°", AIM_ANGLE_OFFSET)
-	end
-end
-
-_G.updateFOV = function(delta)
-	FOV_RADIUS = math.clamp(FOV_RADIUS + delta, 30, 500)
-	if _G.fovValueLabel then
-		_G.fovValueLabel.Text = tostring(FOV_RADIUS)
-	end
-	if fovCircle then
-		fovCircle.Size = UDim2.new(0, FOV_RADIUS*2, 0, FOV_RADIUS*2)
-	end
-end
-
--- ============ TARGET INFO UPDATE FUNCTION ============
-_G.updateTargetInfo = function(targetPlayer)
-	if not TARGET_UI_ENABLED then return end  
+-- ============ ESP ============
+local function applyESP(plr)
+	if plr == player then return end
+	local char = plr.Character
+	if not char then return end
 	
-	local targetInfoFrame = playerGui:FindFirstChild("TargetInfoGui") and playerGui.TargetInfoGui:FindFirstChild("TargetInfoFrame")
-	if not targetInfoFrame then return end
-	
-	if not targetPlayer or not targetPlayer.Character then
-		targetInfoFrame.Visible = false
-		return
-	end
-	
-	local char = targetPlayer.Character
 	local humanoid = char:FindFirstChildOfClass("Humanoid")
-	local hrp = char:FindFirstChild("HumanoidRootPart")
-	if not humanoid or not hrp then
-		targetInfoFrame.Visible = false
-		return
+	if not humanoid or humanoid.Health <= 0 then return end
+	
+	local teamColor = Color3.fromRGB(255, 0, 0)
+	if plr.TeamColor then teamColor = plr.TeamColor.Color
+	elseif plr.Team and plr.Team.TeamColor then teamColor = plr.Team.TeamColor.Color end
+	
+	local highlight = char:FindFirstChild("ESPHighlight")
+	if not highlight then
+		highlight = Instance.new("Highlight", char)
+		highlight.Name = "ESPHighlight"
 	end
+	highlight.FillColor = teamColor
+	highlight.FillTransparency = 0.85
+	highlight.OutlineColor = teamColor
+	highlight.OutlineTransparency = 0
 	
-	targetInfoFrame.Visible = true
-	
-	local headshotImage = targetInfoFrame:FindFirstChild("Headshot")
-	local usernameLabel = targetInfoFrame:FindFirstChild("Username")
-	local healthLabel = targetInfoFrame:FindFirstChild("Health")
-	local distanceLabel = targetInfoFrame:FindFirstChild("Distance")
-	local healthBarFill = targetInfoFrame:FindFirstChild("HealthBarBg") and targetInfoFrame.HealthBarBg:FindFirstChild("HealthBarFill")
-	
-	if headshotImage then
-		headshotImage.Image = "rbxthumb://type=AvatarHeadShot&id=" .. targetPlayer.UserId .. "&w=48&h=48&f=png"
+local head = char:FindFirstChild("Head")
+if head then
+	local billboard = head:FindFirstChild("ESPNameTag")
+	if not ESP_NAMES_ENABLED then
+		if billboard then billboard:Destroy() end
+	elseif not billboard then
+		billboard = Instance.new("BillboardGui", head)
+		billboard.Name = "ESPNameTag"
+		billboard.Size = UDim2.new(0, 200, 0, 30)
+		billboard.StudsOffset = Vector3.new(0, 1.5, 0)
+		billboard.AlwaysOnTop = true
+		local label = Instance.new("TextLabel", billboard)
+		label.BackgroundTransparency = 1
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
+		label.TextColor3 = Color3.fromRGB(255, 255, 255)
+		label.Font = Enum.Font.GothamBold
+		label.TextSize = 12
+		label.TextStrokeTransparency = 0
+		label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 	end
-	if usernameLabel then
-		usernameLabel.Text = targetPlayer.Name
-	end
-	
-	local health, maxHealth = math.floor(humanoid.Health), math.floor(humanoid.MaxHealth)
-	local hp = health / maxHealth
-	
-	if healthLabel then
-		healthLabel.Text = health .. "/" .. maxHealth
-		if hp > 0.6 then
-			healthLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-		elseif hp > 0.3 then
-			healthLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
-		else
-			healthLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
-		end
-	end
-	
-	if healthBarFill then
-		if hp > 0.6 then
-			healthBarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-		elseif hp > 0.3 then
-			healthBarFill.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
-		else
-			healthBarFill.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-		end
-		healthBarFill.Size = UDim2.new(hp, 0, 1, 0)
-	end
-	
-	if distanceLabel then
-		local myChar = player.Character
-		if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-			local dist = (myChar.HumanoidRootPart.Position - hrp.Position).Magnitude
-			distanceLabel.Text = string.format("%.0f studs", dist)
-		else
-			distanceLabel.Text = "? studs"
-		end
-	end
-	
-	local toolLabel = targetInfoFrame:FindFirstChild("Tool")
-	if toolLabel then
-		local tool = char:FindFirstChildOfClass("Tool")
-		if tool then
-			toolLabel.Text = "Tool: " .. tool.Name
-			toolLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-		else
-			toolLabel.Text = "Tool: None"
-			toolLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+end
+
+local function removeESP(plr)
+	if plr.Character then
+		local highlight = plr.Character:FindFirstChild("ESPHighlight")
+		if highlight then highlight:Destroy() end
+		local head = plr.Character:FindFirstChild("Head")
+		if head then
+			local billboard = head:FindFirstChild("ESPNameTag")
+			if billboard then billboard:Destroy() end
 		end
 	end
 end
 
-_G.setTargetOnPlayer = function(partialName)
-	if partialName == "" then
-		TARGET_ON_PLAYER = nil
-		if _G.targetOnLabel then
-			_G.targetOnLabel.Text = "Target On: None"
-		end
-		return
-	end
-	
-	local partial = partialName:lower()
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= player and plr.Name:lower():find(partial, 1, true) then
-			TARGET_ON_PLAYER = plr.Name
-			if _G.targetOnLabel then
-				_G.targetOnLabel.Text = "Target On: " .. plr.Name
-			end
-			return
-		end
-	end
-	TARGET_ON_PLAYER = nil
-	if _G.targetOnLabel then
-		_G.targetOnLabel.Text = "Target On: None (not found)"
-	end
-end
-
--- ============ ESP FUNCTION ============
 _G.updateESP = function()
 	if not ESP_ENABLED then
 		for _, plr in ipairs(Players:GetPlayers()) do
-			if plr ~= player and plr.Character then
-				local highlight = plr.Character:FindFirstChild("ESPHighlight")
-				if highlight then highlight:Destroy() end
-				local head = plr.Character:FindFirstChild("Head")
-				if head then
-					local billboard = head:FindFirstChild("ESPNameTag")
-					if billboard then billboard:Destroy() end
-				end
-			end
+			if plr ~= player then removeESP(plr) end
 		end
 		return
 	end
 	
 	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= player and plr.Character then
-			local char = plr.Character
-			local humanoid = char:FindFirstChildOfClass("Humanoid")
-			if not humanoid or humanoid.Health <= 0 then continue end
-			
-			local teamColor = Color3.fromRGB(255, 0, 0) -- padrão vermelho
-			if plr.TeamColor then
-				teamColor = plr.TeamColor.Color
-			elseif plr.Team and plr.Team.TeamColor then
-				teamColor = plr.Team.TeamColor.Color
-			end
-			
-			local highlight = char:FindFirstChild("ESPHighlight")
-			if not highlight then
-				highlight = Instance.new("Highlight", char)
-				highlight.Name = "ESPHighlight"
-			end
-			highlight.FillColor = teamColor
-			highlight.FillTransparency = 0.5
-			highlight.OutlineColor = teamColor
-			highlight.OutlineTransparency = 0
-			
-			local head = char:FindFirstChild("Head")
-			if head then
-				local billboard = head:FindFirstChild("ESPNameTag")
-				if not billboard then
-					billboard = Instance.new("BillboardGui", head)
-					billboard.Name = "ESPNameTag"
-					billboard.Size = UDim2.new(0, 200, 0, 30)
-					billboard.StudsOffset = Vector3.new(0, 1.5, 0)
-					billboard.AlwaysOnTop = true
-					
-					local label = Instance.new("TextLabel", billboard)
-					label.BackgroundTransparency = 1
-					label.Size = UDim2.new(1, 0, 1, 0)
-					label.Text = plr.DisplayName .. " (@" .. plr.Name .. ")"
-					label.TextColor3 = Color3.fromRGB(255, 255, 255)
-					label.Font = Enum.Font.GothamBold
-					label.TextSize = 12
-					label.TextStrokeTransparency = 0
-					label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-				end
-			end
-		end
+		if plr ~= player then applyESP(plr) end
 	end
 end
 
-_G.refreshESP = function()
-	_G.updateESP()
-end
+_G.refreshESP = function() _G.updateESP() end
 
-if ESP_ENABLED then
-	_G.updateESP()
-end
-
-local success, result = pcall(function()
-	loadstring(game:HttpGet('https://pastebin.com/raw/YZnL7jaV'))()
+Players.PlayerAdded:Connect(function(plr)
+	plr.CharacterAdded:Connect(function()
+		if ESP_ENABLED then
+			task.wait(0.5)
+			applyESP(plr)
+		end
+	end)
 end)
-if not success then warn("Error loading UI: "..tostring(result)) end
+
+Players.PlayerRemoving:Connect(function(plr)
+	removeESP(plr)
+end)
+
+for _, plr in ipairs(Players:GetPlayers()) do
+	if plr ~= player then
+		plr.CharacterAdded:Connect(function()
+			if ESP_ENABLED then
+				task.wait(0.5)
+				applyESP(plr)
+			end
+		end)
+	end
+end
+
+-- ============ REDZ TABS ============
+local AimbotTab = Window:MakeTab({"Aimbot", "crosshair"})
+local VisualsTab = Window:MakeTab({"Visuals", "eye"})
+local TeleportsTab = Window:MakeTab({"Teleports", "map-pin"})
+local MainTab = Window:MakeTab({"Main", "settings"})
+
+Window:SelectTab(AimbotTab)
+
+-- ============ AIMBOT TAB ============
+local AimbotSection = AimbotTab:AddSection({"Aimbot Functions"})
+
+local ToggleAimbot = AimbotTab:AddToggle({
+  Name = "Aimbot",
+  Default = true,
+  Callback = function(v)
+    AIMBOT_ENABLED = v
+    if fovCircle then fovCircle.Visible = v end
+    if not v then UserInputService.MouseBehavior = Enum.MouseBehavior.Default end
+  end
+})
+
+AimbotTab:AddToggle({
+  Name = "Wanted Only",
+  Default = false,
+  Callback = function(v) WANTED_ONLY = v end
+})
+
+AimbotTab:AddToggle({
+  Name = "Ignore Friends",
+  Default = true,
+  Callback = function(v) IGNORE_FRIENDS = v end
+})
+
+AimbotTab:AddTextBox({
+  Name = "Target On",
+  Description = "Type part of player name and press Enter",
+  PlaceholderText = "Player name...",
+  Callback = function(Value)
+    if Value == "" then
+      TARGET_ON_PLAYER = nil
+    else
+      local partial = Value:lower()
+      for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Name:lower():find(partial, 1, true) then
+          TARGET_ON_PLAYER = plr.Name
+          return
+        end
+      end
+      TARGET_ON_PLAYER = nil
+    end
+  end
+})
+
+AimbotTab:AddSlider({
+  Name = "Smooth",
+  Min = 1,
+  Max = 100,
+  Increase = 1,
+  Default = 80,
+  Callback = function(Value) SMOOTHNESS = Value / 100 end
+})
+
+AimbotTab:AddSlider({
+  Name = "Angle Offset",
+  Min = 0,
+  Max = 15,
+  Increase = 1,
+  Default = 10,
+  Callback = function(Value) AIM_ANGLE_OFFSET = Value end
+})
+
+AimbotTab:AddSlider({
+  Name = "FOV Size",
+  Min = 30,
+  Max = 500,
+  Increase = 10,
+  Default = 100,
+  Callback = function(Value)
+    FOV_RADIUS = Value
+    if fovCircle then fovCircle.Size = UDim2.new(0, Value*2, 0, Value*2) end
+  end
+})
+
+-- ============ VISUALS TAB ============
+local VisualsSection = VisualsTab:AddSection({"Visual Options"})
+
+VisualsTab:AddToggle({
+  Name = "Gray Skybox",
+  Default = false,
+  Callback = function(v)
+    if v then enableGraySkybox() else disableGraySkybox() end
+  end
+})
+
+VisualsTab:AddToggle({
+  Name = "ESP",
+  Default = false,
+  Callback = function(v)
+    ESP_ENABLED = v
+    _G.refreshESP()
+  end
+})
+
+VisualsTab:AddToggle({
+  Name = "Hide ESP Names",
+  Description = "Hides the names above players when ESP is active",
+  Default = false,
+  Callback = function(v)
+    ESP_NAMES_ENABLED = not v  
+    _G.refreshESP()
+  end
+})
+
+VisualsTab:AddToggle({
+  Name = "Hide Tag",
+  Default = false,
+  Callback = function(v)
+    HIDE_TAG_ENABLED = v
+    updateTagVisibility()
+  end
+})
+
+VisualsTab:AddToggle({
+  Name = "Target UI",
+  Default = true,
+  Callback = function(v) TARGET_UI_ENABLED = v end
+})
+
+-- ============ TELEPORTS TAB ============
+local TeleportsSection = TeleportsTab:AddSection({"Prison Teleports"})
+
+local teleports = {
+  {"Cells 1", Vector3.new(2035, 156, 2734)},
+  {"Cells 2", Vector3.new(1942, 192, 2713)},
+  {"Armory 1 (Prison)", Vector3.new(1841, 165, 2674)},
+  {"Armory 2 (Prison)", Vector3.new(2236, 165, 2719)},
+  {"Prison Tower 1", Vector3.new(1531, 186, 2731)},
+  {"Prison Tower 2", Vector3.new(1849, 186, 3006)},
+  {"Cafeteria", Vector3.new(1958, 156, 2684)},
+  {"Front Entrance", Vector3.new(1682, 156, 2693)},
+  {"Back Entrance", Vector3.new(2363, 155, 2718)},
+  {"Lootboxes Area", Vector3.new(2325, 156, 2908)},
+  {"Roof", Vector3.new(1794, 180, 2789)},
+  {"Main Yard", Vector3.new(1848, 154, 2897)},
+  {"Back Yard", Vector3.new(2051, 154, 2844)},
+  {"Armory (City)", Vector3.new(1449, 67, 1530)},
+  {"Criminal Base 1", Vector3.new(77, 168, 2455)},
+  {"Criminal Base 2", Vector3.new(57, 135, 870)},
+  {"Criminal Base 3", Vector3.new(1589, 76, 1369)},
+  {"Escape the Prison", Vector3.new(1462, 172, 2720)},
+}
+
+for _, tp in ipairs(teleports) do
+  TeleportsTab:AddButton({tp[1], function()
+    local c = player.Character
+    if c and c:FindFirstChild("HumanoidRootPart") then
+      c.HumanoidRootPart.CFrame = CFrame.new(tp[2])
+    end
+  end})
+end
+
+-- ============ MAIN TAB ============
+local MainSection = MainTab:AddSection({"Main Functions"})
+
+-- ============ PLAYER EVENTS ============
+UserInputService.InputBegan:Connect(function(input, processed)
+  if processed then return end
+  if input.KeyCode == Enum.KeyCode.E then
+    AIMBOT_ENABLED = not AIMBOT_ENABLED
+    if fovCircle then fovCircle.Visible = AIMBOT_ENABLED end
+  end
+end)
+
+player.CharacterAdded:Connect(function()
+  camera.CameraType = Enum.CameraType.Custom
+  UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+  MOUSE_LOCKED = false
+  if HIDE_TAG_ENABLED then
+    task.wait(0.5)
+    updateTagVisibility()
+    task.wait(1)
+    updateTagVisibility()
+  end
+  if ESP_ENABLED then
+    task.wait(0.5)
+    _G.updateESP()
+  end
+end)
+
+if player.Character and HIDE_TAG_ENABLED then
+  task.wait(0.5)
+  updateTagVisibility()
+end
