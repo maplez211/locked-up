@@ -383,15 +383,22 @@ _G.updateESP = function()
 			local humanoid = char:FindFirstChildOfClass("Humanoid")
 			if not humanoid or humanoid.Health <= 0 then continue end
 			
+			local teamColor = Color3.fromRGB(255, 0, 0) -- padrão vermelho
+			if plr.TeamColor then
+				teamColor = plr.TeamColor.Color
+			elseif plr.Team and plr.Team.TeamColor then
+				teamColor = plr.Team.TeamColor.Color
+			end
+			
 			local highlight = char:FindFirstChild("ESPHighlight")
 			if not highlight then
 				highlight = Instance.new("Highlight", char)
 				highlight.Name = "ESPHighlight"
-				highlight.FillColor = Color3.fromRGB(255, 0, 0)
-				highlight.FillTransparency = 0.5
-				highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
-				highlight.OutlineTransparency = 0
 			end
+			highlight.FillColor = teamColor
+			highlight.FillTransparency = 0.5
+			highlight.OutlineColor = teamColor
+			highlight.OutlineTransparency = 0
 			
 			local head = char:FindFirstChild("Head")
 			if head then
