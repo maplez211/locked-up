@@ -1,5 +1,5 @@
--- Main Script (Locked Up) - Redz Library
-local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
+-- Main Script (Locked Up) - Functions Only
+loadstring(game:HttpGet("https://pastebin.com/raw/YZnL7jaV"))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -15,6 +15,7 @@ FOV_RADIUS = 100
 SMOOTHNESS = 0.80
 AIM_ANGLE_OFFSET = 10.5
 PLAYER_FOV = 70 
+SPINBOT_SPEED = 0
 AIMBOT_ENABLED = true
 GRAY_SKYBOX_ENABLED = false
 HIDE_TAG_ENABLED = false
@@ -26,18 +27,6 @@ ESP_NAMES_ENABLED = true
 local MOUSE_LOCKED = false
 local target = nil
 TARGET_ON_PLAYER = nil
-
--- ============ REDZ WINDOW ============
-local Window = redzlib:MakeWindow({
-  Title = "H4X do 2knw | Locked Up Panel",
-  SubTitle = "by 2knw | Version 0.1.1",
-  SaveFolder = "LockedUp_Hub"
-})
-
-Window:AddMinimizeButton({
-    Button = { Image = "rbxassetid://121222457209872", BackgroundTransparency = 1 },
-    Corner = { CornerRadius = UDim.new(35, 1) },
-})
 
 -- ============ FOV CIRCLE ============
 local screenGui = Instance.new("ScreenGui")
@@ -56,6 +45,7 @@ Instance.new("UICorner", fovCircle).CornerRadius = UDim.new(1,0)
 Instance.new("UIStroke", fovCircle).Color = Color3.fromRGB(0, 255, 0)
 fovCircle.UIStroke.Thickness = 1
 fovCircle.Visible = AIMBOT_ENABLED
+_G.fovCircle = fovCircle
 
 -- ============ MAIN FUNCTIONS ============
 local function isVisible(targetCharacter)
@@ -168,24 +158,77 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- ============ SHARED FUNCTIONS ============
-function enableGraySkybox()
-	local lighting = game:GetService("Lighting")
-	pcall(function() if lighting:FindFirstChild("GraySky") then lighting.GraySky:Destroy() end end)
-	local sky = Instance.new("Sky", lighting)
-	sky.Name = "GraySky"
-	sky.SkyboxBk = "rbxassetid://154987705"
-	sky.SkyboxDn = "rbxassetid://154987705"
-	sky.SkyboxFt = "rbxassetid://154987705"
-	sky.SkyboxLf = "rbxassetid://154987705"
-	sky.SkyboxRt = "rbxassetid://154987705"
-	sky.SkyboxUp = "rbxassetid://154987705"
-end
+-- ============ SKYBOX SYSTEM ============
+local currentSkybox = nil
 
-function disableGraySkybox()
+function setSkybox(name)
+	if currentSkybox then
+		pcall(function()
+			local lighting = game:GetService("Lighting")
+			if lighting:FindFirstChild(currentSkybox) then
+				lighting[currentSkybox]:Destroy()
+			end
+		end)
+		currentSkybox = nil
+	end
+	
+	if name == "None" then return end
+
+-- ============ SKYBOXES ============
+local skyboxes = {
+    ["Gray Skybox"] = {
+        SkyboxBk = "rbxassetid://154987705",
+        SkyboxDn = "rbxassetid://154987705",
+        SkyboxFt = "rbxassetid://154987705",
+        SkyboxLf = "rbxassetid://154987705",
+        SkyboxRt = "rbxassetid://154987705",
+        SkyboxUp = "rbxassetid://154987705",
+    },
+    ["2knw & Donk666 Skybox"] = {
+        SkyboxBk = "rbxassetid://121222457209872",
+        SkyboxDn = "rbxassetid://121222457209872",
+        SkyboxFt = "rbxassetid://121222457209872",
+        SkyboxLf = "rbxassetid://121222457209872",
+        SkyboxRt = "rbxassetid://121222457209872",
+        SkyboxUp = "rbxassetid://121222457209872",
+    },
+    ["Snow Skybox"] = {
+        SkyboxBk = "rbxassetid://155657655",
+        SkyboxDn = "rbxassetid://155674246",
+        SkyboxFt = "rbxassetid://155657609",
+        SkyboxLf = "rbxassetid://155657671",
+        SkyboxRt = "rbxassetid://155657619",
+        SkyboxUp = "rbxassetid://155674931",
+    },
+    ["Cartoon Skybox"] = {
+        SkyboxBk = "rbxassetid://15114954171",
+        SkyboxDn = "rbxassetid://15114958869",
+        SkyboxFt = "rbxassetid://15114963740",
+        SkyboxLf = "rbxassetid://15114957947",
+        SkyboxRt = "rbxassetid://15114955238",
+        SkyboxUp = "rbxassetid://15114948718",
+    },
+    ["Lince Skybox"] = {
+    SkyboxBk = "rbxassetid://102112718813044",
+    SkyboxDn = "rbxassetid://102112718813044",
+    SkyboxFt = "rbxassetid://102112718813044",
+    SkyboxLf = "rbxassetid://102112718813044",
+    SkyboxRt = "rbxassetid://102112718813044",
+    SkyboxUp = "rbxassetid://102112718813044",
+},
+}
+	
+	local data = skyboxes[name]
+	if not data then return end
+	
 	local lighting = game:GetService("Lighting")
-	pcall(function() if lighting:FindFirstChild("GraySky") then lighting.GraySky:Destroy() end end)
-	pcall(function() lighting.Sky = nil end)
+	local sky = Instance.new("Sky", lighting)
+	sky.Name = name
+	for prop, value in pairs(data) do
+		sky[prop] = value
+	end
+	
+	currentSkybox = name
 end
 
 function updateTagVisibility()
@@ -299,206 +342,6 @@ for _, plr in ipairs(Players:GetPlayers()) do
 	end
 end
 
--- ============ TABS ============
-local MainTab = Window:MakeTab({"Main", "settings"})
-local AimbotTab = Window:MakeTab({"Aimbot", "crosshair"})
-local VisualsTab = Window:MakeTab({"Visuals", "eye"})
-local TeleportsTab = Window:MakeTab({"Teleports", "map-pin"})
-
-Window:SelectTab(MainTab)
-
--- ============ AIMBOT TAB ============
-local AimbotSection = AimbotTab:AddSection({"Aimbot Functions"})
-
-local ToggleAimbot = AimbotTab:AddToggle({
-  Name = "Aimbot",
-  Default = true,
-  Callback = function(v)
-    AIMBOT_ENABLED = v
-    if fovCircle then fovCircle.Visible = v end
-    if not v then UserInputService.MouseBehavior = Enum.MouseBehavior.Default end
-  end
-})
-
-AimbotTab:AddToggle({
-  Name = "Wanted Only",
-  Default = false,
-  Callback = function(v) WANTED_ONLY = v end
-})
-
-AimbotTab:AddToggle({
-  Name = "Ignore Friends",
-  Default = true,
-  Callback = function(v) IGNORE_FRIENDS = v end
-})
-
-AimbotTab:AddTextBox({
-  Name = "Target On",
-  Description = "Type part of player name and press Enter",
-  PlaceholderText = "Player name...",
-  Callback = function(Value)
-    if Value == "" then
-      TARGET_ON_PLAYER = nil
-    else
-      local partial = Value:lower()
-      for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= player and plr.Name:lower():find(partial, 1, true) then
-          TARGET_ON_PLAYER = plr.Name
-          return
-        end
-      end
-      TARGET_ON_PLAYER = nil
-    end
-  end
-})
-
-AimbotTab:AddSlider({
-  Name = "Smooth",
-  Min = 1,
-  Max = 100,
-  Increase = 1,
-  Default = 80,
-  Callback = function(Value) SMOOTHNESS = Value / 100 end
-})
-
-AimbotTab:AddSlider({
-  Name = "Angle Offset",
-  Min = 0,
-  Max = 15,
-  Increase = 1,
-  Default = 10,
-  Callback = function(Value) AIM_ANGLE_OFFSET = Value end
-})
-
-AimbotTab:AddSlider({
-  Name = "FOV Size",
-  Min = 30,
-  Max = 500,
-  Increase = 10,
-  Default = 100,
-  Callback = function(Value)
-    FOV_RADIUS = Value
-    if fovCircle then fovCircle.Size = UDim2.new(0, Value*2, 0, Value*2) end
-  end
-})
-
--- ============ VISUALS TAB ============
-local VisualsSection = VisualsTab:AddSection({"Visual Options"})
-
-VisualsTab:AddToggle({
-  Name = "Gray Skybox",
-  Default = false,
-  Callback = function(v)
-    if v then enableGraySkybox() else disableGraySkybox() end
-  end
-})
-
-VisualsTab:AddToggle({
-  Name = "ESP",
-  Default = false,
-  Callback = function(v)
-    ESP_ENABLED = v
-    _G.refreshESP()
-  end
-})
-
-VisualsTab:AddToggle({
-  Name = "Hide ESP Names",
-  Description = "Hides the names above players when ESP is active",
-  Default = false,
-  Callback = function(v)
-    ESP_NAMES_ENABLED = not v  
-    _G.refreshESP()
-  end
-})
-
-VisualsTab:AddToggle({
-  Name = "Hide Tag",
-  Default = false,
-  Callback = function(v)
-    HIDE_TAG_ENABLED = v
-    updateTagVisibility()
-  end
-})
-
-VisualsTab:AddToggle({
-  Name = "Target UI",
-  Default = true,
-  Callback = function(v) TARGET_UI_ENABLED = v end
-})
-
--- ============ TELEPORTS TAB ============
-local TeleportsSection = TeleportsTab:AddSection({"Prison Teleports"})
-
-local teleports = {
-  {"Escape the Prison", Vector3.new(2025, 95, 2763)},
-  {"Admin Room", Vector3.new(825, 127, 3762)},
-  {"Cafeteria", Vector3.new(1958, 156, 2684)},
-  {"Crafting", Vector3.new(1976, 156, 2822)},
-  {"Kitchen", Vector3.new(1895, 158, 2659)},
-  {"Armory 1 (Prison)", Vector3.new(1841, 165, 2674)},
-  {"Break Room 1", Vector3.new(1820, 156, 2688)},
-  {"Break Room 2", Vector3.new(1801, 156, 2654)},
-  {"Warden Room", Vector3.new(1700, 156, 2810)},
-  {"Front Entrance", Vector3.new(1682, 156, 2693)},
-  {"Roof", Vector3.new(1794, 180, 2789)},
-  {"Prison Tower 1 (M82)", Vector3.new(1531, 186, 2731)},
-  {"Prison Tower 2", Vector3.new(1849, 186, 3006)},
-  {"Front Yard", Vector3.new(1848, 154, 2897)},
-  {"Back Yard", Vector3.new(2051, 154, 2844)},
-  {"Cells 1", Vector3.new(2035, 156, 2734)},
-  {"Cells 2", Vector3.new(1942, 192, 2713)},
-  {"Sewage", Vector3.new(1944, 136, 2557)},
-  {"Armory 2 (Prison)", Vector3.new(2236, 165, 2719)},
-  {"Hall 1", Vector3.new(2259, 155, 2685)},
-  {"Back Entrance", Vector3.new(2363, 155, 2718)},
-  {"Lootboxes Area", Vector3.new(2325, 156, 2908)},
-  {"Criminal Base 1", Vector3.new(77, 168, 2455)},
-  {"Criminal Base 2", Vector3.new(57, 135, 870)},
-  {"Criminal Base 3", Vector3.new(1589, 76, 1369)},
-  {"Armory (City)", Vector3.new(1449, 67, 1530)},
-  {"Wood House (DB and Desert Eagle)", Vector3.new(1173, 213, 3309)},
-  {"Beach (Agent Vest)", Vector3.new(-189, 115, 1762)},
-  {"Bell Tower (M82)", Vector3.new(762, 173, 2307)},
-  {"Empty Grocery", Vector3.new(503, 110, 2085)},
-  {"Empty Building (DB)", Vector3.new(768, 110, 2398)},
-  {"Gym", Vector3.new(247, 110, 1729)},
-  {"Walpark", Vector3.new(397, 110, 1931)},
-  {"Motel", Vector3.new(206, 142, 989)},
-}
-
-for _, tp in ipairs(teleports) do
-  TeleportsTab:AddButton({tp[1], function()
-    local c = player.Character
-    if c and c:FindFirstChild("HumanoidRootPart") then
-      c.HumanoidRootPart.CFrame = CFrame.new(tp[2])
-    end
-  end})
-end
-
--- ============ MAIN TAB ============
-MainTab:AddDiscordInvite({
-    Name = "H4X do 2knw",
-    Description = "Join our Discord server for updates and support!",
-    Logo = "rbxassetid://121222457209872",
-    Invite = "https://discord.gg/YqVunAY8J2",  
-})
-
-local MainSection = MainTab:AddSection({"Main Functions"})
-
-MainTab:AddSlider({
-  Name = "Player FOV",
-  Description = "Changes your field of view (60-120)",
-  Min = 60,
-  Max = 120,
-  Increase = 1,
-  Default = 70,
-  Callback = function(Value)
-    PLAYER_FOV = Value
-    camera.FieldOfView = Value
-  end
-})
-
 -- ============ PLAYER EVENTS ============
 UserInputService.InputBegan:Connect(function(input, processed)
   if processed then return end
@@ -517,6 +360,17 @@ player.CharacterAdded:Connect(function()
     task.wait(0.5)
     _G.updateESP()
   end
+end)
+
+-- ============ SPINBOT ============
+RunService.RenderStepped:Connect(function()
+    if SPINBOT_SPEED and SPINBOT_SPEED > 0 then
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(SPINBOT_SPEED), 0)
+        end
+    end
 end)
 
 camera.FieldOfView = PLAYER_FOV
