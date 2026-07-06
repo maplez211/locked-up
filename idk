@@ -25,6 +25,7 @@ IGNORE_FRIENDS = true
 ESP_ENABLED = false
 ESP_NAMES_ENABLED = true  
 local MOUSE_LOCKED = false
+HIDE_FOV_CIRCLE = false
 local target = nil
 TARGET_ON_PLAYER = nil
 
@@ -46,6 +47,13 @@ Instance.new("UIStroke", fovCircle).Color = Color3.fromRGB(0, 255, 0)
 fovCircle.UIStroke.Thickness = 1
 fovCircle.Visible = AIMBOT_ENABLED
 _G.fovCircle = fovCircle
+
+_G.toggleFOVCircle = function(hide)
+    local stroke = fovCircle:FindFirstChild("UIStroke")
+    if stroke then
+        stroke.Enabled = not hide
+    end
+end
 
 -- ============ MAIN FUNCTIONS ============
 local function isVisible(targetCharacter)
@@ -215,6 +223,30 @@ local skyboxes = {
     SkyboxLf = "rbxassetid://102112718813044",
     SkyboxRt = "rbxassetid://102112718813044",
     SkyboxUp = "rbxassetid://102112718813044",
+    },
+        ["Red Skybox"] = {
+    SkyboxBk = "rbxassetid://401664839",
+    SkyboxDn = "rbxassetid://401664862",
+    SkyboxFt = "rbxassetid://401664960",
+    SkyboxLf = "rbxassetid://401664881",
+    SkyboxRt = "rbxassetid://401664901",
+    SkyboxUp = "rbxassetid://401664936",
+    },
+        ["Slam Skybox"] = {
+    SkyboxBk = "rbxassetid://111576755001670",
+    SkyboxDn = "rbxassetid://111576755001670",
+    SkyboxFt = "rbxassetid://111576755001670",
+    SkyboxLf = "rbxassetid://111576755001670",
+    SkyboxRt = "rbxassetid://111576755001670",
+    SkyboxUp = "rbxassetid://111576755001670",
+    },
+        ["Green Eyeball Skybox"] = {
+    SkyboxBk = "rbxassetid://113857258921684",
+    SkyboxDn = "rbxassetid://131099902234134",
+    SkyboxFt = "rbxassetid://98342317659302",
+    SkyboxLf = "rbxassetid://130914716725043",
+    SkyboxRt = "rbxassetid://93970360759256",
+    SkyboxUp = "rbxassetid://135000456639127",
 },
 }
 	
@@ -242,6 +274,34 @@ function updateTagVisibility()
 			billboard.Enabled = not HIDE_TAG_ENABLED
 		end
 	end
+end
+
+-- ============ BULLET COLOR SYSTEM ============
+function setBulletColor(name)
+    local colors = {
+        ["Default"] = Color3.fromRGB(255, 244, 90),  
+        ["Red"] = Color3.fromRGB(255, 0, 0),
+        ["Green"] = Color3.fromRGB(0, 255, 0),
+        ["Blue"] = Color3.fromRGB(0, 0, 255),
+        ["Yellow"] = Color3.fromRGB(255, 255, 0),
+        ["Purple"] = Color3.fromRGB(128, 0, 128),
+        ["Cyan"] = Color3.fromRGB(0, 255, 255),
+        ["Orange"] = Color3.fromRGB(255, 165, 0),
+        ["Pink"] = Color3.fromRGB(255, 105, 180),
+        ["Black"] = Color3.fromRGB(0, 0, 0),
+        ["White"] = Color3.fromRGB(255, 255, 255),   
+    }
+    
+    local color = colors[name]
+    if not color then return end
+    
+    local status = player:FindFirstChild("Status")
+    if status then
+        local bulletColor = status:FindFirstChild("BulletColor")
+        if bulletColor and bulletColor:IsA("Color3Value") then
+            bulletColor.Value = color
+        end
+    end
 end
 
 -- ============ ESP ============
