@@ -453,6 +453,16 @@ player.CharacterAdded:Connect(function()
   end
 end)
 
+-- ============ PLAYER TELEPORT DROPDOWN REFRESH ============
+Players.PlayerAdded:Connect(function()
+    task.wait(0.5)
+    if _G.refreshPlayerDropdown then _G.refreshPlayerDropdown() end
+end)
+Players.PlayerRemoving:Connect(function()
+    task.wait(0.3)
+    if _G.refreshPlayerDropdown then _G.refreshPlayerDropdown() end
+end)
+
 -- ============ SPINBOT ============
 RunService.RenderStepped:Connect(function()
     if SPINBOT_SPEED and SPINBOT_SPEED > 0 then
