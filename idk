@@ -320,9 +320,9 @@ end
 
 task.spawn(function()
     local hue = 0
-    while task.wait(0.05) do
+    while task.wait(0.01) do
         if RAINBOW_ACTIVE then
-            hue = (hue + 1) % 360
+            hue = (hue + 5) % 360
             local color = Color3.fromHSV(hue / 360, 1, 1)
             local status = player:FindFirstChild("Status")
             if status then
