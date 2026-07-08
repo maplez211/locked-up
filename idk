@@ -466,16 +466,14 @@ local weaponSkins = {
     ["White Neon"] = {Type = "Material", Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 255, 255)},
     ["Purple Emo"] = {Type = "Texture", Id = "rbxassetid://10890485599"},
     ["Bat Style"] = {Type = "Texture", Id = "rbxassetid://10890476175"},
-    ["Glitch"] = {Type = "Texture", Id = "rbxassetid://860440971"},
+    ["Creepy Eyes"] = {Type = "Texture", Id = "rbxassetid://6669971798"},
     ["Purple Pattern"] = {Type = "Texture", Id = "rbxassetid://110365609046207"},
-    ["Metalic Vaporwave"] = {Type = "Texture", Id = "rbxassetid://872373148"},
+    ["Trippy"] = {Type = "Texture", Id = "rbxassetid://7105910765"},
     ["Rainbow"] = {Type = "Rainbow"},
-    ["LGBT Flag"] = {Type = "Texture", Id = "rbxassetid://2561283255"},
-    ["Trans Flag"] = {Type = "Texture", Id = "rbxassetid://2561282632"},
-    ["Bi Flag"] = {Type = "Texture", Id = "rbxassetid://2561280220"},
-    ["Pride Flag"] = {Type = "Texture", Id = "rbxassetid://2566585618"},
-    ["Missing Texture"] = {Type = "Texture", Id = "rbxassetid://857245407"},
-    ["Golden"] = {Type = "Texture", Id = "rbxassetid://189436356"},
+    ["Minecraft Diamond"] = {Type = "Texture", Id = "rbxassetid://128303257540898"},
+    ["Minecraft Portal"] = {Type = "Texture", Id = "rbxassetid://115888657325090"},
+    ["Izutsumi"] = {Type = "Texture", Id = "rbxassetid://133379193206668"},
+    ["Golden"] = {Type = "Texture", Id = "rbxassetid://7717621185"},
 }
 
 function applyTextureSkin(tool, skinId)
@@ -529,7 +527,7 @@ function applyMaterialSkin(tool, material, color)
     end
 end
 
-function applyRainbowSkin(tool, color)
+function applyRainbowSkin(tool)
     for _, part in ipairs(tool:GetDescendants()) do
         if not part:IsA("BasePart") then continue end
         
@@ -544,7 +542,7 @@ function applyRainbowSkin(tool, color)
         end
         
         part.Material = Enum.Material.Neon
-        part.Color = color
+        part.Color = _G.RAINBOW_SKIN_COLOR or Color3.fromRGB(255, 0, 0)
     end
 end
 
@@ -556,9 +554,7 @@ function applySkinToTool(tool, skinData)
     elseif skinData.Type == "Material" then
         applyMaterialSkin(tool, skinData.Material, skinData.Color)
     elseif skinData.Type == "Rainbow" then
-        local hue = (tick() * 120) % 360  
-        local color = Color3.fromHSV(hue / 360, 1, 1)
-        applyRainbowSkin(tool, color)
+        applyRainbowSkin(tool)
     end
 end
 
@@ -596,6 +592,15 @@ function setWeaponSkin(name)
         end
     end
 end
+
+_G.RAINBOW_SKIN_COLOR = Color3.fromRGB(255, 0, 0)
+task.spawn(function()
+    local hue = 0
+    while task.wait(0.03) do
+        hue = (hue + 5) % 360
+        _G.RAINBOW_SKIN_COLOR = Color3.fromHSV(hue / 360, 1, 1)
+    end
+end)
 
 task.spawn(function()
     while task.wait(0.17) do
