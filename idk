@@ -462,8 +462,18 @@ local weaponSkins = {
     ["Default"] = {Type = "Default"},
     ["Magma"] = {Type = "Texture", Id = "rbxassetid://77712984658507"},
     ["White Neon"] = {Type = "Material", Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 255, 255)},
-    ["Donk666"] = {Type = "Texture", Id = "rbxassetid://12807408854"},
+    ["Purple Emo"] = {Type = "Texture", Id = "rbxassetid://10890485599"},
+    ["Bat Style"] = {Type = "Texture", Id = "rbxassetid://10890476175"},
+    ["Glitch"] = {Type = "Texture", Id = "rbxassetid://860440971"},
     ["Purple Pattern"] = {Type = "Texture", Id = "rbxassetid://110365609046207"},
+    ["Metalic Vaporwave"] = {Type = "Texture", Id = "rbxassetid://872373148"},
+    ["Rainbow"] = {Type = "Rainbow"},
+    ["LGBT Flag"] = {Type = "Texture", Id = "rbxassetid://2561283255"},
+    ["Trans Flag"] = {Type = "Texture", Id = "rbxassetid://2561282632"},
+    ["Bi Flag"] = {Type = "Texture", Id = "rbxassetid://2561280220"},
+    ["Pride Flag"] = {Type = "Texture", Id = "rbxassetid://2566585618"},
+    ["Missing Texture"] = {Type = "Texture", Id = "rbxassetid://857245407"},
+    ["Golden"] = {Type = "Texture", Id = "rbxassetid://189436356"},
 }
 
 function applyTextureSkin(tool, skinId)
@@ -511,6 +521,25 @@ function applyMaterialSkin(tool, material, color)
     end
 end
 
+function applyRainbowSkin(tool, color)
+    for _, part in ipairs(tool:GetDescendants()) do
+        if part:IsA("BasePart") then
+            for _, child in ipairs(part:GetChildren()) do
+                if child:IsA("Texture") or child:IsA("Decal") then
+                    child:Destroy()
+                end
+            end
+            
+            if part:IsA("MeshPart") then
+                part.TextureID = ""
+            end
+            
+            part.Material = Enum.Material.Neon
+            part.Color = color
+        end
+    end
+end
+
 function applySkinToTool(tool, skinData)
     if not skinData then return end
     
@@ -518,6 +547,10 @@ function applySkinToTool(tool, skinData)
         applyTextureSkin(tool, skinData.Id)
     elseif skinData.Type == "Material" then
         applyMaterialSkin(tool, skinData.Material, skinData.Color)
+    elseif skinData.Type == "Rainbow" then
+        local hue = (tick() * 60) % 360
+        local color = Color3.fromHSV(hue / 360, 1, 1)
+        applyRainbowSkin(tool, color)
     end
 end
 
