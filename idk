@@ -717,50 +717,59 @@ local shotSounds = {
 }
 
 function applyShotSound(tool, soundId)
+    if not soundId or soundId == "" then return end
     local handle = tool:FindFirstChild("Handle")
     if not handle then return end
-    
     local fireSound = handle:FindFirstChild("FireSound")
     if not fireSound then return end
+    fireSound.SoundId = soundId
+end
+
+function applySoundToAllTools()
+    if not currentShotSound or currentShotSound == "" then return end
     
-    if soundId == "" then
-        return
+    local char = player.Character
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then applyShotSound(tool, currentShotSound) end
     end
     
-    fireSound.SoundId = soundId
+    local bp = player:FindFirstChild("Backpack")
+    if bp then
+        for _, tool in ipairs(bp:GetChildren()) do
+            if tool:IsA("Tool") then applyShotSound(tool, currentShotSound) end
+        end
+    end
 end
 
 function setShotSound(name)
     local soundId = shotSounds[name]
     if soundId == nil then return end
-    
     currentShotSound = soundId
-    
-    local char = player.Character
-    if char then
-        local tool = char:FindFirstChildOfClass("Tool")
-        if tool then applyShotSound(tool, soundId) end
-    end
-    
-    local backpack = player:FindFirstChild("Backpack")
-    if backpack then
-        for _, tool in ipairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") then applyShotSound(tool, soundId) end
-        end
-    end
+    applySoundToAllTools()
 end
 
-player.ChildAdded:Connect(function(child)  
+player.ChildAdded:Connect(function(child)
     if child:IsA("Tool") and currentShotSound and currentShotSound ~= "" then
         task.wait(0.3)
         applyShotSound(child, currentShotSound)
     end
 end)
 
-backpack.ChildAdded:Connect(function(child)  
+local backpack = player:WaitForChild("Backpack")
+backpack.ChildAdded:Connect(function(child)
     if child:IsA("Tool") and currentShotSound and currentShotSound ~= "" then
         task.wait(0.3)
         applyShotSound(child, currentShotSound)
+    end
+end)
+
+player.CharacterAdded:Connect(function()
+    if currentShotSound and currentShotSound ~= "" then
+        for i = 1, 6 do
+            task.wait(0.5)
+            applySoundToAllTools()
+        end
     end
 end)
 
