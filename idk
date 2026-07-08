@@ -470,9 +470,8 @@ local weaponSkins = {
     ["Purple Pattern"] = {Type = "Texture", Id = "rbxassetid://110365609046207"},
     ["Trippy"] = {Type = "Texture", Id = "rbxassetid://7105910765"},
     ["Rainbow"] = {Type = "Rainbow"},
-    ["Minecraft Diamond"] = {Type = "Texture", Id = "rbxassetid://128303257540898"},
-    ["Minecraft Portal"] = {Type = "Texture", Id = "rbxassetid://115888657325090"},
-    ["Izutsumi"] = {Type = "Texture", Id = "rbxassetid://133379193206668"},
+    ["Red Pattern"] = {Type = "Texture", Id = "rbxassetid://11149623628"},
+    ["Bizarre Force"] = {Type = "Material", Material = Enum.Material.ForceField, Color = Color3.fromRGB(150, 200, 255)},
     ["Golden"] = {Type = "Texture", Id = "rbxassetid://7717621185"},
 }
 
@@ -610,7 +609,7 @@ task.spawn(function()
                 for tool, _ in pairs(activeSkinTools) do
                     if tool and tool.Parent then
                         local count = skinApplyCount[tool] or 0
-                        if count < MAX_APPLIES then
+                        if skinData.Type == "Rainbow" or skinData.Type == "Material" or count < MAX_APPLIES then
                             applySkinToTool(tool, skinData)
                             skinApplyCount[tool] = count + 1
                         end
