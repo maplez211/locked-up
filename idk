@@ -732,28 +732,29 @@ end
 
 task.spawn(function()
     while task.wait(0.2) do 
-        if not currentShotSound or currentShotSound == "" then continue end
-        
-        local char = player.Character
-        if char then
-            for _, child in ipairs(char:GetChildren()) do
-                if child:IsA("Tool") and not processedTools[child] then
-                    processedTools[child] = true
-                    task.spawn(function()
-                        tryApplyWithRetry(child, currentShotSound)
-                    end)
+        if not currentShotSound or currentShotSound == "" then 
+        else
+            local char = player.Character
+            if char then
+                for _, child in ipairs(char:GetChildren()) do
+                    if child:IsA("Tool") and not processedTools[child] then
+                        processedTools[child] = true
+                        task.spawn(function()
+                            tryApplyWithRetry(child, currentShotSound)
+                        end)
+                    end
                 end
             end
-        end
-        
-        local bp = player:FindFirstChild("Backpack")
-        if bp then
-            for _, child in ipairs(bp:GetChildren()) do
-                if child:IsA("Tool") and not processedTools[child] then
-                    processedTools[child] = true
-                    task.spawn(function()
-                        tryApplyWithRetry(child, currentShotSound)
-                    end)
+            
+            local bp = player:FindFirstChild("Backpack")
+            if bp then
+                for _, child in ipairs(bp:GetChildren()) do
+                    if child:IsA("Tool") and not processedTools[child] then
+                        processedTools[child] = true
+                        task.spawn(function()
+                            tryApplyWithRetry(child, currentShotSound)
+                        end)
+                    end
                 end
             end
         end
