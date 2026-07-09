@@ -767,6 +767,10 @@ local itemGrabs = {
         Position = CFrame.new(1179.56, 213.5, 3306.94),
         Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Desert Eagle"):WaitForChild("ITEMPICKUP")
     },
+    ["Keycard"] = {
+        Position = CFrame.new(946, 68, 923),  
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Keycard"):WaitForChild("ITEMPICKUP")
+    },
 }
 
 function grabItem(itemName)
