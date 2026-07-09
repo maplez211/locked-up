@@ -1,5 +1,5 @@
 -- Main Script (Locked Up) - Functions Only
-loadstring(game:HttpGet("https://pastebin.com/raw/YZnL7jaV"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/maplez211/UICZOOL/refs/heads/main/R"))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
