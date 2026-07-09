@@ -37,6 +37,8 @@ local rainbowConnection = nil
 TARGET_ON_PLAYER = nil
 local currentSkin = nil
 local activeSkinTools = {} 
+local currentShotSound = nil
+local processedTools = {} 
 
 -- ============ FOV CIRCLE ============
 local screenGui = Instance.new("ScreenGui")
@@ -700,8 +702,6 @@ task.spawn(function()
 end)
 
 -- ============ SHOT SOUND SYSTEM ============
-local currentShotSound = nil
-
 local shotSounds = {
     ["Default"] = "",
     ["CS 1.6 AK-47"] = "rbxassetid://93834968698731",
@@ -716,51 +716,56 @@ local shotSounds = {
     ["M16 Shot"] = "rbxassetid://84408989598671",
 }
 
-function applyShotSound(tool, soundId)
-    if not soundId or soundId == "" then return end
-    if not tool or not tool:IsA("Tool") then return end
+local function forceApplySound(tool, soundId)
+    if not soundId or soundId == "" then return false end
+    if not tool or not tool:IsA("Tool") then return false end
     
     local handle = tool:FindFirstChild("Handle")
-    if not handle then return end
+    if not handle then return false end
     
     local fireSound = handle:FindFirstChild("FireSound")
-    if fireSound and fireSound:IsA("Sound") then
-        fireSound.SoundId = soundId
-        return true
-    end
-    return false
+    if not fireSound or not fireSound:IsA("Sound") then return false end
+    
+    fireSound.SoundId = soundId
+    return true
 end
 
-function waitForFireSound(tool, soundId, attempts)
-    attempts = attempts or 10
-    for i = 1, attempts do
-        if applyShotSound(tool, soundId) then
+local function tryApplyWithRetry(tool, soundId, maxAttempts)
+    maxAttempts = maxAttempts or 20
+    for i = 1, maxAttempts do
+        if forceApplySound(tool, soundId) then
             return true
         end
-        task.wait(0.1)
+        task.wait(0.05) 
     end
     return false
 end
 
 function applySoundToAllTools()
-    if not currentShotSound or currentShotSound == "" then return end
+    if not currentShotSound or currentShotSound == "" then return
+    
+    local processed = {}
     
     local function processTool(tool)
-        if tool:IsA("Tool") then
-            waitForFireSound(tool, currentShotSound)
+        if tool:IsA("Tool") and not processed[tool] then
+            processed[tool] = true
+            task.spawn(function()
+                tryApplyWithRetry(tool, currentShotSound)
+            end)
         end
     end
     
     local char = player.Character
     if char then
-        local tool = char:FindFirstChildOfClass("Tool")
-        if tool then processTool(tool) end
+        for _, child in ipairs(char:GetChildren()) do
+            processTool(child)
+        end
     end
     
     local bp = player:FindFirstChild("Backpack")
     if bp then
-        for _, tool in ipairs(bp:GetChildren()) do
-            processTool(tool)
+        for _, child in ipairs(bp:GetChildren()) do
+            processTool(child)
         end
     end
 end
@@ -772,67 +777,35 @@ function setShotSound(name)
     applySoundToAllTools()
 end
 
-local function setupToolObserver(tool)
-    if not tool:IsA("Tool") then return end
-    
-    if currentShotSound and currentShotSound ~= "" then
-        task.spawn(function()
-            waitForFireSound(tool, currentShotSound, 15) 
-        end)
-    end
-    
-    local handle = tool:FindFirstChild("Handle")
-    if handle then
-        handle.ChildAdded:Connect(function(child)
-            if child.Name == "FireSound" and child:IsA("Sound") then
-                if currentShotSound and currentShotSound ~= "" then
-                    child.SoundId = currentShotSound
+task.spawn(function()
+    while task.wait(0.2) do 
+        if not currentShotSound or currentShotSound == "" then continue end
+        
+        local char = player.Character
+        if char then
+            for _, child in ipairs(char:GetChildren()) do
+                if child:IsA("Tool") and not processedTools[child] then
+                    processedTools[child] = true
+                    task.spawn(function()
+                        tryApplyWithRetry(child, currentShotSound)
+                    end)
                 end
             end
-        end)
-    end
-    
-    tool.ChildAdded:Connect(function(child)
-        if child.Name == "Handle" then
-            if currentShotSound and currentShotSound ~= "" then
-                waitForFireSound(tool, currentShotSound, 15)
-            end
-            
-            child.ChildAdded:Connect(function(subChild)
-                if subChild.Name == "FireSound" and subChild:IsA("Sound") then
-                    if currentShotSound and currentShotSound ~= "" then
-                        subChild.SoundId = currentShotSound
-                    end
-                end
-            end)
         end
-    end)
-end
-
-player.ChildAdded:Connect(function(child)
-    if child:IsA("Tool") then
-        setupToolObserver(child)
+        
+        local bp = player:FindFirstChild("Backpack")
+        if bp then
+            for _, child in ipairs(bp:GetChildren()) do
+                if child:IsA("Tool") and not processedTools[child] then
+                    processedTools[child] = true
+                    task.spawn(function()
+                        tryApplyWithRetry(child, currentShotSound)
+                    end)
+                end
+            end
+        end
     end
 end)
-
-local backpack = player:WaitForChild("Backpack")
-backpack.ChildAdded:Connect(function(child)
-    if child:IsA("Tool") then
-        setupToolObserver(child)
-    end
-end)
-
-for _, tool in ipairs(player:GetChildren()) do
-    if tool:IsA("Tool") then
-        setupToolObserver(tool)
-    end
-end
-
-for _, tool in ipairs(backpack:GetChildren()) do
-    if tool:IsA("Tool") then
-        setupToolObserver(tool)
-    end
-end
 
 -- ============ PLAYER EVENTS ============
 UserInputService.InputBegan:Connect(function(input, processed)
@@ -848,24 +821,11 @@ player.CharacterAdded:Connect(function()
   UserInputService.MouseBehavior = Enum.MouseBehavior.Default
   MOUSE_LOCKED = false
   camera.FieldOfView = PLAYER_FOV
+  processedTools = {} 
+  
   if ESP_ENABLED then
     task.wait(0.5)
     _G.updateESP()
-  end
-
-  if currentShotSound and currentShotSound ~= "" then
-    task.wait(0.5)
-    local char = player.Character
-    if char then
-      local tool = char:FindFirstChildOfClass("Tool")
-      if tool then applyShotSound(tool, currentShotSound) end
-    end
-    local bp = player:FindFirstChild("Backpack")
-    if bp then
-      for _, tool in ipairs(bp:GetChildren()) do
-        if tool:IsA("Tool") then applyShotSound(tool, currentShotSound) end
-      end
-    end
   end
 end)
 
