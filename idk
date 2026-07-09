@@ -763,13 +763,59 @@ end)
 
 -- ============ ITEM GRAB SYSTEM ============
 local itemGrabs = {
+    -- Items
+    ["Keycard"] = {
+        Position = CFrame.new(946, 68, 923),  
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Key"):WaitForChild("ITEMPICKUP")
+    },
+    ["First Aid"] = {
+        Position = CFrame.new(1844, 156, 2697),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("First Aid"):WaitForChild("ITEMPICKUP")
+    },
+
     ["Desert Eagle"] = {
         Position = CFrame.new(1179.56, 213.5, 3306.94),
         Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Desert Eagle"):WaitForChild("ITEMPICKUP")
     },
-    ["Keycard"] = {
-        Position = CFrame.new(946, 68, 923),  
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Key"):WaitForChild("ITEMPICKUP")
+    ["UZI"] = {
+        Position = CFrame.new(1843, 157, 2695),  
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("UZI"):WaitForChild("ITEMPICKUP")
+    },
+    ["Scar"] = {
+        Position = CFrame.new(1457, 9, 0), -- Confirme a coordenada Z
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Scar"):WaitForChild("ITEMPICKUP")
+    },
+    ["M16"] = {
+        Position = CFrame.new(1398, 69, 1558),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("M16"):WaitForChild("ITEMPICKUP")
+    },
+    ["SVD"] = {
+        Position = CFrame.new(29, 138, 944),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("SVD"):WaitForChild("ITEMPICKUP")
+    },
+    ["AK-47"] = {
+        Position = CFrame.new(89, 152, 2475),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("AK-47"):WaitForChild("ITEMPICKUP")
+    },
+    ["DB"] = {
+        Position = CFrame.new(1185, 214, 3290),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("DB"):WaitForChild("ITEMPICKUP")
+    },
+    ["M82"] = {
+        Position = CFrame.new(1521, 186, 2731),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("M82"):WaitForChild("ITEMPICKUP")
+    },
+    ["AUG"] = {
+        Position = CFrame.new(2226, 156, 2696),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("AUG"):WaitForChild("ITEMPICKUP")
+    },
+    ["IA2"] = {
+        Position = CFrame.new(1881, 156, 2672),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("IA2"):WaitForChild("ITEMPICKUP")
+    },
+    ["M9"] = {
+        Position = CFrame.new(1843, 157, 2695),
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("M9"):WaitForChild("ITEMPICKUP")
     },
 }
 
