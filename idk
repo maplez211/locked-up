@@ -530,53 +530,6 @@ function applyMaterialSkin(tool, material, color)
     end
 end
 
-function setWeaponSkin(name)
-    local skinData = weaponSkins[name]
-    if not skinData then return end
-    
-    if currentSkin == "Rainbow" and name ~= "Rainbow" then
-        if rainbowConnection then
-            rainbowConnection:Disconnect()
-            rainbowConnection = nil
-        end
-    end
-    
-    if name == "Rainbow" and not rainbowConnection then
-        rainbowConnection = RunService.RenderStepped:Connect(function()
-            rainbowHue = (rainbowHue + 1) % 360
-        end)
-    end
-    
-    currentSkin = name
-    skinApplyCount = {}  
-    
-    for tool, _ in pairs(activeSkinTools) do
-        activeSkinTools[tool] = nil
-    end
-    
-    if skinData.Type ~= "Default" then
-        local char = player.Character
-        if char then
-            local tool = char:FindFirstChildOfClass("Tool")
-            if tool then
-                applySkinToTool(tool, skinData)
-                activeSkinTools[tool] = true
-                skinApplyCount[tool] = 1
-            end
-        end
-        
-        local backpack = player:FindFirstChild("Backpack")
-        if backpack then
-            for _, tool in ipairs(backpack:GetChildren()) do
-                if tool:IsA("Tool") then
-                    applySkinToTool(tool, skinData)
-                    activeSkinTools[tool] = true
-                    skinApplyCount[tool] = 1
-                end
-            end
-        end
-    end
-end
 
 function applyRainbowSkin(tool)
     local color = Color3.fromHSV(rainbowHue / 360, 1, 1)
