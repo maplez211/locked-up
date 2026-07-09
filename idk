@@ -695,7 +695,7 @@ local function tryApplyWithRetry(tool, soundId, maxAttempts)
 end
 
 function applySoundToAllTools()
-    if not currentShotSound or currentShotSound == "" then return
+    if not currentShotSound or currentShotSound == "" then return end
     
     local processed = {}
     
