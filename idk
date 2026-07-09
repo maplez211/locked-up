@@ -718,26 +718,49 @@ local shotSounds = {
 
 function applyShotSound(tool, soundId)
     if not soundId or soundId == "" then return end
+    if not tool or not tool:IsA("Tool") then return end
+    
     local handle = tool:FindFirstChild("Handle")
     if not handle then return end
+    
     local fireSound = handle:FindFirstChild("FireSound")
-    if not fireSound then return end
-    fireSound.SoundId = soundId
+    if fireSound and fireSound:IsA("Sound") then
+        fireSound.SoundId = soundId
+        return true
+    end
+    return false
+end
+
+function waitForFireSound(tool, soundId, attempts)
+    attempts = attempts or 10
+    for i = 1, attempts do
+        if applyShotSound(tool, soundId) then
+            return true
+        end
+        task.wait(0.1)
+    end
+    return false
 end
 
 function applySoundToAllTools()
     if not currentShotSound or currentShotSound == "" then return end
     
+    local function processTool(tool)
+        if tool:IsA("Tool") then
+            waitForFireSound(tool, currentShotSound)
+        end
+    end
+    
     local char = player.Character
     if char then
         local tool = char:FindFirstChildOfClass("Tool")
-        if tool then applyShotSound(tool, currentShotSound) end
+        if tool then processTool(tool) end
     end
     
     local bp = player:FindFirstChild("Backpack")
     if bp then
         for _, tool in ipairs(bp:GetChildren()) do
-            if tool:IsA("Tool") then applyShotSound(tool, currentShotSound) end
+            processTool(tool)
         end
     end
 end
@@ -749,29 +772,67 @@ function setShotSound(name)
     applySoundToAllTools()
 end
 
+local function setupToolObserver(tool)
+    if not tool:IsA("Tool") then return end
+    
+    if currentShotSound and currentShotSound ~= "" then
+        task.spawn(function()
+            waitForFireSound(tool, currentShotSound, 15) 
+        end)
+    end
+    
+    local handle = tool:FindFirstChild("Handle")
+    if handle then
+        handle.ChildAdded:Connect(function(child)
+            if child.Name == "FireSound" and child:IsA("Sound") then
+                if currentShotSound and currentShotSound ~= "" then
+                    child.SoundId = currentShotSound
+                end
+            end
+        end)
+    end
+    
+    tool.ChildAdded:Connect(function(child)
+        if child.Name == "Handle" then
+            if currentShotSound and currentShotSound ~= "" then
+                waitForFireSound(tool, currentShotSound, 15)
+            end
+            
+            child.ChildAdded:Connect(function(subChild)
+                if subChild.Name == "FireSound" and subChild:IsA("Sound") then
+                    if currentShotSound and currentShotSound ~= "" then
+                        subChild.SoundId = currentShotSound
+                    end
+                end
+            end)
+        end
+    end)
+end
+
 player.ChildAdded:Connect(function(child)
-    if child:IsA("Tool") and currentShotSound and currentShotSound ~= "" then
-        task.wait(0.3)
-        applyShotSound(child, currentShotSound)
+    if child:IsA("Tool") then
+        setupToolObserver(child)
     end
 end)
 
 local backpack = player:WaitForChild("Backpack")
 backpack.ChildAdded:Connect(function(child)
-    if child:IsA("Tool") and currentShotSound and currentShotSound ~= "" then
-        task.wait(0.3)
-        applyShotSound(child, currentShotSound)
+    if child:IsA("Tool") then
+        setupToolObserver(child)
     end
 end)
 
-player.CharacterAdded:Connect(function()
-    if currentShotSound and currentShotSound ~= "" then
-        for i = 1, 6 do
-            task.wait(0.5)
-            applySoundToAllTools()
-        end
+for _, tool in ipairs(player:GetChildren()) do
+    if tool:IsA("Tool") then
+        setupToolObserver(tool)
     end
-end)
+end
+
+for _, tool in ipairs(backpack:GetChildren()) do
+    if tool:IsA("Tool") then
+        setupToolObserver(tool)
+    end
+end
 
 -- ============ PLAYER EVENTS ============
 UserInputService.InputBegan:Connect(function(input, processed)
