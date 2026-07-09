@@ -769,7 +769,7 @@ local itemGrabs = {
     },
     ["Keycard"] = {
         Position = CFrame.new(946, 68, 923),  
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Keycard"):WaitForChild("ITEMPICKUP")
+        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Key"):WaitForChild("ITEMPICKUP")
     },
 }
 
