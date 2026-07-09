@@ -763,65 +763,91 @@ end)
 
 -- ============ ITEM GRAB SYSTEM ============
 local itemGrabs = {
-    -- Items
     ["Keycard"] = {
-        Position = CFrame.new(946, 68, 923),  
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Key"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(946, 68, 923)},
+        ItemName = "Key"
     },
     ["First Aid"] = {
-        Position = CFrame.new(1844, 156, 2697),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("First Aid"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(1844, 156, 2697)},
+        ItemName = "First Aid"
     },
-
     ["Desert Eagle"] = {
-        Position = CFrame.new(1179.56, 213.5, 3306.94),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Desert Eagle"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(1179.56, 213.5, 3306.94)},
+        ItemName = "Desert Eagle"
     },
     ["UZI"] = {
-        Position = CFrame.new(1843, 157, 2695),  
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("UZI"):WaitForChild("ITEMPICKUP")
+        Positions = {
+            CFrame.new(1843, 157, 2695),
+            CFrame.new(1409.17, 66.57, 1572.93)  
+        },
+        ItemName = "UZI"
     },
     ["Scar"] = {
-        Position = CFrame.new(1457, 9, 0), -- Confirme a coordenada Z
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Scar"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(1457, 9, 0)},
+        ItemName = "Scar"
     },
     ["M16"] = {
-        Position = CFrame.new(1398, 69, 1558),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("M16"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(1398, 69, 1558)},
+        ItemName = "M16"
     },
     ["SVD"] = {
-        Position = CFrame.new(29, 138, 944),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("SVD"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(29, 138, 944)},
+        ItemName = "SVD"
     },
     ["AK-47"] = {
-        Position = CFrame.new(89, 152, 2475),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("AK-47"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(89, 152, 2475)},
+        ItemName = "AK-47"
     },
     ["DB"] = {
-        Position = CFrame.new(1185, 214, 3290),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("DB"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(1185, 214, 3290)},
+        ItemName = "DB"
     },
     ["M82"] = {
-        Position = CFrame.new(1521, 186, 2731),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("M82"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(1521, 186, 2731)},
+        ItemName = "M82"
     },
     ["AUG"] = {
-        Position = CFrame.new(2226, 156, 2696),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("AUG"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(2226, 156, 2696)},
+        ItemName = "AUG"
     },
     ["IA2"] = {
-        Position = CFrame.new(1881, 156, 2672),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("IA2"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(1881, 156, 2672)},
+        ItemName = "IA2"
     },
     ["M9"] = {
-        Position = CFrame.new(1843, 157, 2695),
-        Path = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("M9"):WaitForChild("ITEMPICKUP")
+        Positions = {CFrame.new(1843, 157, 2695)},
+        ItemName = "M9"
     },
 }
+
+local itemPickupCache = {}
+
+local function findItemPickup(itemName)
+    if itemPickupCache[itemName] then
+        return itemPickupCache[itemName]
+    end
+    
+    local giver = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver")
+    
+    for _, model in ipairs(giver:GetChildren()) do
+        if model.Name == itemName and model:IsA("Model") then
+            local pickup = model:FindFirstChild("ITEMPICKUP")
+            if pickup then
+                itemPickupCache[itemName] = pickup
+                return pickup
+            end
+        end
+    end
+    
+    return nil
+end
 
 function grabItem(itemName)
     local itemData = itemGrabs[itemName]
     if not itemData then return end
+    
+    local pickup = findItemPickup(itemData.ItemName)
+    if not pickup then return end
     
     local char = player.Character
     if not char then return end
@@ -830,18 +856,22 @@ function grabItem(itemName)
     
     local originalPosition = hrp.CFrame
     
-    hrp.CFrame = itemData.Position
-    task.wait(0.2)
-    
-    local args = {
-        [1] = itemData.Path,
-        [2] = "GetTool"
-    }
-    game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Interact"):InvokeServer(unpack(args))
+    for _, pos in ipairs(itemData.Positions) do
+        hrp.CFrame = pos
+        task.wait(0.2)
+        
+        local args = {
+            [1] = pickup,
+            [2] = "GetTool"
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Interact"):InvokeServer(unpack(args))
+    end
     
     task.wait(0.1)
     hrp.CFrame = originalPosition
 end
+
+_G.grabItem = grabItem
 
 -- ============ PLAYER EVENTS ============
 UserInputService.InputBegan:Connect(function(input, processed)
