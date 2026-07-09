@@ -761,6 +761,29 @@ task.spawn(function()
     end
 end)
 
+-- ============ ITEM GRAB SYSTEM ============
+function grabDesertEagle()
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    local originalPosition = hrp.CFrame
+    local targetPosition = CFrame.new(1179.56, 213.5, 3306.94)
+    
+    hrp.CFrame = targetPosition
+    task.wait(0.2)
+    
+    local args = {
+        [1] = workspace:WaitForChild("Prison_ITEMS"):WaitForChild("giver"):WaitForChild("Desert Eagle"):WaitForChild("ITEMPICKUP"),
+        [2] = "GetTool"
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Interact"):InvokeServer(unpack(args))
+    
+    task.wait(0.1)
+    hrp.CFrame = originalPosition
+end
+
 -- ============ PLAYER EVENTS ============
 UserInputService.InputBegan:Connect(function(input, processed)
   if processed then return end
