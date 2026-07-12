@@ -38,9 +38,9 @@ local target = nil
 local rainbowConnection = nil
 TARGET_ON_PLAYER = nil
 local currentSkin = nil
-local activeSkinTools = {} 
-local firerateConnections = {}
 local currentShotSound = nil
+local activeSkinTools = {} 
+local activeGunMods = {} 
 local processedTools = {} 
 
 -- ============ FOV CIRCLE ============
@@ -877,88 +877,89 @@ end
 _G.grabItem = grabItem
 
 -- ============ FIRERATE SYSTEM ============
-function setFirerate(value)
-    FIRERATE_VALUE = value
-    
-    task.spawn(function()
-        local char = player.Character
-        if char then
-            local tool = char:FindFirstChildOfClass("Tool")
-            if tool then
-                pcall(function()
-                    local GunStates = require(tool:WaitForChild("GunStates"))
-                    GunStates.FireRate = FIRERATE_VALUE
-                end)
+activeGunMods.Firerate = {
+    hooked = false,
+    value = 0,
+    connectionData = {}
+}
+
+local function applyFirerateToTool(tool, value)
+    if not tool or not tool:IsA("Tool") then return end
+    pcall(function()
+        local GunStates = require(tool:WaitForChild("GunStates"))
+        GunStates.FireRate = value
+    end)
+end
+
+local function applyFirerateToAllTools(value)
+    local char = player.Character
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            applyFirerateToTool(tool, value)
+        end
+    end
+    local bp = player:FindFirstChild("Backpack")
+    if bp then
+        for _, tool in ipairs(bp:GetChildren()) do
+            if tool:IsA("Tool") then
+                applyFirerateToTool(tool, value)
             end
         end
-    end)
+    end
+end
+
+function setFirerate(value)
+    local mod = activeGunMods.Firerate
+    mod.value = value
+    FIRERATE_VALUE = value
+    
+    applyFirerateToAllTools(value)
     
     if value <= 0 then return end
-    if firerateHooked then return end
+    if mod.hooked then return end
     
-    firerateHooked = true
+    mod.hooked = true
     
     local LoadWeaponRemote = game:GetService("ReplicatedStorage").Events.LoadTool
     
-    for i, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
-        local Old
-        Old = hookfunction(connection.Function, function(Tool, ...)
+    for _, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
+        local Old = connection.Function
+        local newFunc = function(Tool, ...)
             xpcall(function()
                 local GunStates = require(Tool:WaitForChild("GunStates"))
-                GunStates.FireRate = FIRERATE_VALUE
+                GunStates.FireRate = activeGunMods.Firerate.value
             end, function()
-                warn("Failed to write new GunStates")
+                warn("Failed to set firerate")
             end)
-            
             return Old(Tool, ...)
-        end)
+        end
         
-        table.insert(firerateConnections, {Connection = connection, OldFunction = Old})
+        connection.Function = newFunc
+        table.insert(mod.connectionData, {
+            connection = connection,
+            original = Old,
+            custom = newFunc
+        })
     end
 end
 
 function resetFirerate()
+    local mod = activeGunMods.Firerate
+    mod.value = 0
     FIRERATE_VALUE = 0
     
-    task.spawn(function()
-        local char = player.Character
-        if char then
-            local tool = char:FindFirstChildOfClass("Tool")
-            if tool then
-                pcall(function()
-                    local GunStates = require(tool:WaitForChild("GunStates"))
-                    GunStates.FireRate = 0 
-                end)
-            end
-        end
-    end)
+    applyFirerateToAllTools(0)
     
-    for _, data in ipairs(firerateConnections) do
+    for _, data in ipairs(mod.connectionData) do
         pcall(function()
-            data.Connection.Function = data.OldFunction
+            data.connection.Function = data.original
         end)
     end
     
-    firerateConnections = {}
-    firerateHooked = false
+    mod.connectionData = {}
+    mod.hooked = false
 end
-
-task.spawn(function()
-    while task.wait(0.1) do
-        if FIRERATE_VALUE > 0 and firerateHooked then
-            local char = player.Character
-            if char then
-                local tool = char:FindFirstChildOfClass("Tool")
-                if tool then
-                    pcall(function()
-                        local GunStates = require(tool:WaitForChild("GunStates"))
-                        GunStates.FireRate = FIRERATE_VALUE
-                    end)
-                end
-            end
-        end
-    end
-end)
 
 -- ============ PLAYER EVENTS ============
 UserInputService.InputBegan:Connect(function(input, processed)
