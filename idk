@@ -879,32 +879,18 @@ _G.grabItem = grabItem
 -- ============ FIRERATE SYSTEM ============
 activeGunMods.Firerate = {
     hooked = false,
-    value = 0,
-    connectionData = {}
+    value = 0
 }
-
-local function applyFirerateToTool(tool, value)
-    if not tool or not tool:IsA("Tool") then return end
-    pcall(function()
-        local GunStates = require(tool:WaitForChild("GunStates"))
-        GunStates.FireRate = value
-    end)
-end
 
 local function applyFirerateToAllTools(value)
     local char = player.Character
     if char then
         local tool = char:FindFirstChildOfClass("Tool")
         if tool then
-            applyFirerateToTool(tool, value)
-        end
-    end
-    local bp = player:FindFirstChild("Backpack")
-    if bp then
-        for _, tool in ipairs(bp:GetChildren()) do
-            if tool:IsA("Tool") then
-                applyFirerateToTool(tool, value)
-            end
+            pcall(function()
+                local GunStates = require(tool:WaitForChild("GunStates"))
+                GunStates.FireRate = value
+            end)
         end
     end
 end
@@ -923,24 +909,18 @@ function setFirerate(value)
     
     local LoadWeaponRemote = game:GetService("ReplicatedStorage").Events.LoadTool
     
-    for _, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
-        local Old = connection.Function
-        local newFunc = function(Tool, ...)
+    for i, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
+        local Old
+        Old = hookfunction(connection.Function, function(Tool, ...)
             xpcall(function()
                 local GunStates = require(Tool:WaitForChild("GunStates"))
                 GunStates.FireRate = activeGunMods.Firerate.value
             end, function()
-                warn("Failed to set firerate")
+                warn("Failed to write new GunStates")
             end)
+            
             return Old(Tool, ...)
-        end
-        
-        connection.Function = newFunc
-        table.insert(mod.connectionData, {
-            connection = connection,
-            original = Old,
-            custom = newFunc
-        })
+        end)
     end
 end
 
@@ -950,16 +930,17 @@ function resetFirerate()
     FIRERATE_VALUE = 0
     
     applyFirerateToAllTools(0)
-    
-    for _, data in ipairs(mod.connectionData) do
-        pcall(function()
-            data.connection.Function = data.original
-        end)
-    end
-    
-    mod.connectionData = {}
     mod.hooked = false
 end
+
+task.spawn(function()
+    while task.wait(0.1) do
+        local mod = activeGunMods.Firerate
+        if mod.value > 0 and mod.hooked then
+            applyFirerateToAllTools(mod.value)
+        end
+    end
+end)
 
 -- ============ PLAYER EVENTS ============
 UserInputService.InputBegan:Connect(function(input, processed)
