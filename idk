@@ -879,7 +879,8 @@ _G.grabItem = grabItem
 -- ============ FIRERATE SYSTEM ============
 activeGunMods.Firerate = {
     hooked = false,
-    value = 0
+    value = 0,
+    hookData = {}
 }
 
 local function applyFirerateToAllTools(value)
@@ -891,6 +892,17 @@ local function applyFirerateToAllTools(value)
                 local GunStates = require(tool:WaitForChild("GunStates"))
                 GunStates.FireRate = value
             end)
+        end
+    end
+    local bp = player:FindFirstChild("Backpack")
+    if bp then
+        for _, tool in ipairs(bp:GetChildren()) do
+            if tool:IsA("Tool") then
+                pcall(function()
+                    local GunStates = require(tool:WaitForChild("GunStates"))
+                    GunStates.FireRate = value
+                end)
+            end
         end
     end
 end
@@ -912,25 +924,29 @@ function setFirerate(value)
     for i, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
         local Old
         Old = hookfunction(connection.Function, function(Tool, ...)
-            xpcall(function()
-                local GunStates = require(Tool:WaitForChild("GunStates"))
-                GunStates.FireRate = activeGunMods.Firerate.value
-            end, function()
-                warn("Failed to write new GunStates")
-            end)
+            if activeGunMods.Firerate.hooked and activeGunMods.Firerate.value > 0 then
+                xpcall(function()
+                    local GunStates = require(Tool:WaitForChild("GunStates"))
+                    GunStates.FireRate = activeGunMods.Firerate.value
+                end, function()
+                    warn("Failed to write new GunStates")
+                end)
+            end
             
             return Old(Tool, ...)
         end)
+        
+        table.insert(mod.hookData, Old)
     end
 end
 
 function resetFirerate()
     local mod = activeGunMods.Firerate
+    mod.hooked = false
     mod.value = 0
     FIRERATE_VALUE = 0
     
     applyFirerateToAllTools(0)
-    mod.hooked = false
 end
 
 task.spawn(function()
