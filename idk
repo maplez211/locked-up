@@ -17,8 +17,8 @@ PLAYER_FOV = 70
 SPINBOT_SPEED = 0
 AIM_ANGLE_OFFSET = 10.5
 local rainbowHue = 0
-local FIRERATE_VALUE = 0
-local firerateHooked = false
+local GunMods = {}
+local gunModsHooked = false
 AIMBOT_ENABLED = true
 GRAY_SKYBOX_ENABLED = false
 HIDE_TAG_ENABLED = false
@@ -875,29 +875,34 @@ end
 
 _G.grabItem = grabItem
 
--- ============ FIRERATE SYSTEM ============
-function setFirerate(value)
-    FIRERATE_VALUE = value
+-- ============ GUN STATES MOD SYSTEM ============
+function setGunMod(property, value)
+    GunMods[property] = value
     
-    if value <= 0 then return end
-    if firerateHooked then return end
-    
-    firerateHooked = true
-    
-    local LoadWeaponRemote = game:GetService("ReplicatedStorage").Events.LoadTool
-    
-    for i, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
-        local Old
-        Old = hookfunction(connection.Function, function(Tool, ...)
-            xpcall(function()
-                local GunStates = require(Tool:WaitForChild("GunStates"))
-                GunStates.FireRate = FIRERATE_VALUE
-            end, function()
-                warn("Failed to write new GunStates")
+    if not gunModsHooked then
+        gunModsHooked = true
+        
+        local LoadWeaponRemote = game:GetService("ReplicatedStorage").Events.LoadTool
+        
+        for i, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
+            local Old
+            Old = hookfunction(connection.Function, function(Tool, ...)
+                xpcall(function()
+                    local GunStates = require(Tool:WaitForChild("GunStates"))
+                    for prop, val in pairs(GunMods) do
+                        if type(val) == "boolean" then
+                            GunStates[prop] = val
+                        elseif val > 0 then
+                            GunStates[prop] = val
+                        end
+                    end
+                end, function()
+                    warn("Failed to write new GunStates")
+                end)
+                
+                Old(Tool, ...)
             end)
-            
-            Old(Tool, ...)
-        end)
+        end
     end
 end
 
