@@ -784,7 +784,7 @@ local itemGrabs = {
     },
     ["Scar"] = {
         Positions = {CFrame.new(1457, 9, 0)},
-        ItemName = "Scar"
+        ItemName = "SCAR"
     },
     ["M16"] = {
         Positions = {CFrame.new(1398, 69, 1558)},
