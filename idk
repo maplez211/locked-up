@@ -879,28 +879,6 @@ _G.grabItem = grabItem
 function setFirerate(value)
     FIRERATE_VALUE = value
     
-    local char = player.Character
-    if char then
-        local tool = char:FindFirstChildOfClass("Tool")
-        if tool then
-            pcall(function()
-                local GunStates = require(tool:WaitForChild("GunStates"))
-                GunStates.FireRate = value
-            end)
-        end
-    end
-    local bp = player:FindFirstChild("Backpack")
-    if bp then
-        for _, tool in ipairs(bp:GetChildren()) do
-            if tool:IsA("Tool") then
-                pcall(function()
-                    local GunStates = require(tool:WaitForChild("GunStates"))
-                    GunStates.FireRate = value
-                end)
-            end
-        end
-    end
-    
     if value <= 0 then return end
     if firerateHooked then return end
     
@@ -920,32 +898,6 @@ function setFirerate(value)
             
             Old(Tool, ...)
         end)
-    end
-end
-
-function resetFirerate()
-    FIRERATE_VALUE = 0
-    
-    local char = player.Character
-    if char then
-        local tool = char:FindFirstChildOfClass("Tool")
-        if tool then
-            pcall(function()
-                local GunStates = require(tool:WaitForChild("GunStates"))
-                GunStates.FireRate = 0
-            end)
-        end
-    end
-    local bp = player:FindFirstChild("Backpack")
-    if bp then
-        for _, tool in ipairs(bp:GetChildren()) do
-            if tool:IsA("Tool") then
-                pcall(function()
-                    local GunStates = require(tool:WaitForChild("GunStates"))
-                    GunStates.FireRate = 0
-                end)
-            end
-        end
     end
 end
 
