@@ -876,10 +876,9 @@ end
 _G.grabItem = grabItem
 
 -- ============ FIRERATE SYSTEM ============
-local FIRERATE_VALUE = 0
-local firerateHooked = false
-
-local function applyFirerateToAllTools(value)
+function setFirerate(value)
+    FIRERATE_VALUE = value
+    
     local char = player.Character
     if char then
         local tool = char:FindFirstChildOfClass("Tool")
@@ -901,11 +900,6 @@ local function applyFirerateToAllTools(value)
             end
         end
     end
-end
-
-function setFirerate(value)
-    FIRERATE_VALUE = value
-    applyFirerateToAllTools(value)
     
     if value <= 0 then return end
     if firerateHooked then return end
@@ -924,14 +918,35 @@ function setFirerate(value)
                 warn("Failed to write new GunStates")
             end)
             
-            return Old(Tool, ...)
+            Old(Tool, ...)
         end)
     end
 end
 
 function resetFirerate()
     FIRERATE_VALUE = 0
-    applyFirerateToAllTools(0)
+    
+    local char = player.Character
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            pcall(function()
+                local GunStates = require(tool:WaitForChild("GunStates"))
+                GunStates.FireRate = 0
+            end)
+        end
+    end
+    local bp = player:FindFirstChild("Backpack")
+    if bp then
+        for _, tool in ipairs(bp:GetChildren()) do
+            if tool:IsA("Tool") then
+                pcall(function()
+                    local GunStates = require(tool:WaitForChild("GunStates"))
+                    GunStates.FireRate = 0
+                end)
+            end
+        end
+    end
 end
 
 -- ============ PLAYER EVENTS ============
