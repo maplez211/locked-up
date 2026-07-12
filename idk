@@ -880,24 +880,24 @@ function setFirerate(value)
     FIRERATE_VALUE = value
     
     if value <= 0 then return end
-    
     if firerateHooked then return end
+    
     firerateHooked = true
     
     local LoadWeaponRemote = game:GetService("ReplicatedStorage").Events.LoadTool
     
-    for i, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
-        local Old = hookfunction(connection.Function, function(Tool, ...)
+    for _, connection in next, getconnections(LoadWeaponRemote.OnClientEvent) do
+        local Old = connection.Function
+        connection.Function = function(Tool, ...)
             xpcall(function()
                 local GunStates = require(Tool:WaitForChild("GunStates"))
                 GunStates.FireRate = FIRERATE_VALUE
-                print("Firerate set to", FIRERATE_VALUE, "for", Tool.Name)
             end, function()
                 warn("Failed to set firerate")
             end)
             
-            Old(Tool, ...)
-        end)
+            return Old(Tool, ...)
+        end
     end
 end
 
