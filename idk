@@ -1,20 +1,6 @@
 -- Main Script (Locked Up) - Functions Only
 loadstring(game:HttpGet("https://raw.githubusercontent.com/maplez211/UICZOOL/refs/heads/main/R"))()
 
--- ============ SAVE SYSTEM ============
-local SaveManager = game:GetService("HttpService")
-local SaveFolder = "LockedUp_Hub"
-
-task.wait(0.5)
-
-if _G.fovCircle then
-    _G.fovCircle.Visible = AIMBOT_ENABLED
-end
-if not AIMBOT_ENABLED then
-    UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-end
-camera.FieldOfView = PLAYER_FOV
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
