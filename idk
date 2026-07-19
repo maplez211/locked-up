@@ -873,6 +873,11 @@ local function findItemPickup(itemName)
                 itemPickupCache[itemName] = pickup
                 return pickup
             end
+            local part = model:FindFirstChildOfClass("BasePart")
+            if part then
+                itemPickupCache[itemName] = part
+                return part
+            end
         end
     end
     
@@ -902,6 +907,31 @@ function grabItem(itemName)
             [2] = "GetTool"
         }
         game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Interact"):InvokeServer(unpack(args))
+        
+        local startTime = tick()
+        local gotTool = false
+        
+        repeat
+            task.wait(0.1)
+            local bp = player:FindFirstChild("Backpack")
+            if bp and #bp:GetChildren() > 0 then
+                gotTool = true
+            end
+            if char and char:FindFirstChildOfClass("Tool") then
+                gotTool = true
+            end
+        until gotTool or (tick() - startTime > 3.5)
+        
+        if not gotTool then
+
+            pcall(function()
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "Kayen's Panel",
+                    Text = "Failed to grab " .. itemName .. "! Try again.",
+                    Duration = 4,
+                })
+            end)
+        end
     end
     
     task.wait(0.1)
