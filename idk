@@ -816,15 +816,19 @@ local itemGrabs = {
         ItemName = "UZI"
     },
     ["Scar"] = {
-        Positions = {CFrame.new(1568.16, 67.11, 1378.86)},
+        Positions = {CFrame.new(1568, 70, 1379)},
         ItemName = "SCAR"
+    },
+    ["Remington 870"] = {
+        Positions = {CFrame.new(1568, 70, 1392)},
+        ItemName = "Remington 870"
     },
     ["M16"] = {
         Positions = {CFrame.new(1398, 69, 1558)},
         ItemName = "M16"
     },
     ["SVD"] = {
-        Positions = {CFrame.new(29, 138, 944)},
+        Positions = {CFrame.new(28, 138, 944)},
         ItemName = "SVD"
     },
     ["AK-47"] = {
@@ -1046,38 +1050,20 @@ end)
 _G.grabItem = grabItem
 
 -- ============ DISCORD WEBHOOK ============
-local function fetchHeadshot(userId)
-    local ok, res = pcall(function()
-        return request({
-            Url = "https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=" .. userId .. "&size=150x150&format=Png&isCircular=false",
-            Method = "GET"
-        })
-    end)
-    if ok and res and res.StatusCode == 200 then
-        local dok, decoded = pcall(game:GetService("HttpService").JSONDecode, game:GetService("HttpService"), res.Body)
-        if dok and decoded and decoded.data and decoded.data[1] then
-            return decoded.data[1].imageUrl
-        end
-    end
-    return "https://www.roblox.com/headshot-thumbnail/image?userId=" .. userId .. "&width=420&height=420&format=png"
-end
-
 local function sendWebhook()
     local webhookUrl = "https://discord.com/api/webhooks/COLOQUE_SUA_URL_AQUI"
-    
-    local headshot = fetchHeadshot(player.UserId)
     
     local embed = {
         title = "Kayen's Panel | Locked Up",
         description = "**" .. player.Name .. "** (" .. player.DisplayName .. ") executed the Panel",
         color = 0x00B450,
-        thumbnail = {
-            url = headshot
-        },
         fields = {
             {name = "User ID", value = tostring(player.UserId), inline = true},
             {name = "Time", value = os.date("%H:%M:%S"), inline = true},
             {name = "Place", value = tostring(game.PlaceId), inline = true},
+        },
+        image = {
+            url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
         },
         footer = {text = "Kayen's Panel"},
         timestamp = os.date("!%Y-%m-%dT%H:%M:%S") .. "Z"
@@ -1088,25 +1074,14 @@ local function sendWebhook()
         username = "Kayen's Panel"
     })
     
-    local success = pcall(function()
-        request({
+    pcall(function()
+        syn.request({
             Url = webhookUrl,
             Method = "POST",
             Headers = {["Content-Type"] = "application/json"},
             Body = body
         })
     end)
-    
-    if not success then
-        pcall(function()
-            syn.request({
-                Url = webhookUrl,
-                Method = "POST",
-                Headers = {["Content-Type"] = "application/json"},
-                Body = body
-            })
-        end)
-    end
     
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Kayen's Panel",
