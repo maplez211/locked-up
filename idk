@@ -1053,58 +1053,46 @@ _G.grabItem = grabItem
 local HttpService = game:GetService("HttpService")
 local http_request = http_request or request or (syn and syn.request) or (http and http.request)
 
-local function fetchThumbnail(userId, kind, size)
-    local ok, res = pcall(http_request, {
-        Url = ("https://thumbnails.roblox.com/v1/users/%s?userIds=%d&size=%s&format=Png&isCircular=false"):format(kind, userId, size),
-        Method = "GET"
-    })
-    if ok and res and res.StatusCode == 200 then
-        local dok, decoded = pcall(HttpService.JSONDecode, HttpService, res.Body)
-        if dok and decoded and decoded.data and decoded.data[1] then
-            return decoded.data[1].imageUrl
-        end
-    end
-    return ("https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=420&height=420&format=png"):format(userId)
-end
-
 local function sendWebhook()
-    local webhookUrl = "https://discord.com/api/webhooks/COLOQUE_SUA_URL_AQUI"
+    local webhookUrl = "https://discord.com/api/webhooks/1526594816329257012/-hy_u311N_uct3DGVzkQ2_IMl1gLCO0aD7OUATPfTdVBA_WXD5-JAlUAtrw_CbNQ4Al_"
     
     local userId = player.UserId
-    local head = fetchThumbnail(userId, "avatar-headshot", "150x150")
+
+    local bodyUrl = ("https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=420&height=420&format=png"):format(userId)
     
     local embed = {
         color = 0x00B450,
-        author = { 
-            name = player.DisplayName .. " (@" .. player.Name .. ")", 
-            icon_url = head, 
-            url = "https://www.roblox.com/users/" .. userId .. "/profile" 
-        },
         title = "Kayen's Panel | Locked Up",
-        description = "Script executed successfully!",
+        description = "**" .. player.Name .. "** executed the script!",
+        image = {
+            url = bodyUrl
+        },
         fields = {
             { name = "User ID", value = "`" .. userId .. "`", inline = true },
             { name = "Time", value = "`" .. os.date("%H:%M:%S") .. "`", inline = true },
-            { name = "Place", value = "`" .. game.PlaceId .. "`", inline = true },
         },
         footer = { text = "Kayen's Panel" },
         timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
     
+    if http_request then
+        pcall(function()
+            http_request({
+                Url = webhookUrl,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = HttpService:JSONEncode({ embeds = { embed } })
+            })
+        end)
+    end
+    
     pcall(function()
-        http_request({
-            Url = webhookUrl,
-            Method = "POST",
-            Headers = { ["Content-Type"] = "application/json" },
-            Body = HttpService:JSONEncode({ embeds = { embed } })
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Kayen's Panel",
+            Text = "Script executed! Notification sent to Discord server.",
+            Duration = 5,
         })
     end)
-    
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Kayen's Panel",
-        Text = "Script executed! Notification sent to Discord server.",
-        Duration = 5,
-    })
 end
 
 task.spawn(sendWebhook)
