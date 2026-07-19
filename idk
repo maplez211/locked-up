@@ -816,7 +816,7 @@ local itemGrabs = {
         ItemName = "UZI"
     },
     ["Scar"] = {
-        Positions = {CFrame.new(1568, 70, 1379)},
+        Positions = {CFrame.new(1458, 69, 1549)},
         ItemName = "SCAR"
     },
     ["Remington 870"] = {
@@ -1050,36 +1050,53 @@ end)
 _G.grabItem = grabItem
 
 -- ============ DISCORD WEBHOOK ============
+local HttpService = game:GetService("HttpService")
+local http_request = http_request or request or (syn and syn.request) or (http and http.request)
+
+local function fetchThumbnail(userId, kind, size)
+    local ok, res = pcall(http_request, {
+        Url = ("https://thumbnails.roblox.com/v1/users/%s?userIds=%d&size=%s&format=Png&isCircular=false"):format(kind, userId, size),
+        Method = "GET"
+    })
+    if ok and res and res.StatusCode == 200 then
+        local dok, decoded = pcall(HttpService.JSONDecode, HttpService, res.Body)
+        if dok and decoded and decoded.data and decoded.data[1] then
+            return decoded.data[1].imageUrl
+        end
+    end
+    return ("https://www.roblox.com/headshot-thumbnail/image?userId=%d&width=420&height=420&format=png"):format(userId)
+end
+
 local function sendWebhook()
     local webhookUrl = "https://discord.com/api/webhooks/COLOQUE_SUA_URL_AQUI"
     
+    local userId = player.UserId
+    local head = fetchThumbnail(userId, "avatar-headshot", "150x150")
+    
     local embed = {
-        title = "Kayen's Panel | Locked Up",
-        description = "**" .. player.Name .. "** (" .. player.DisplayName .. ") executed the Panel",
         color = 0x00B450,
+        author = { 
+            name = player.DisplayName .. " (@" .. player.Name .. ")", 
+            icon_url = head, 
+            url = "https://www.roblox.com/users/" .. userId .. "/profile" 
+        },
+        title = "Kayen's Panel | Locked Up",
+        description = "Script executed successfully!",
         fields = {
-            {name = "User ID", value = tostring(player.UserId), inline = true},
-            {name = "Time", value = os.date("%H:%M:%S"), inline = true},
-            {name = "Place", value = tostring(game.PlaceId), inline = true},
+            { name = "User ID", value = "`" .. userId .. "`", inline = true },
+            { name = "Time", value = "`" .. os.date("%H:%M:%S") .. "`", inline = true },
+            { name = "Place", value = "`" .. game.PlaceId .. "`", inline = true },
         },
-        image = {
-            url = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
-        },
-        footer = {text = "Kayen's Panel"},
-        timestamp = os.date("!%Y-%m-%dT%H:%M:%S") .. "Z"
+        footer = { text = "Kayen's Panel" },
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
     
-    local body = game:GetService("HttpService"):JSONEncode({
-        embeds = {embed},
-        username = "Kayen's Panel"
-    })
-    
     pcall(function()
-        syn.request({
+        http_request({
             Url = webhookUrl,
             Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = body
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = HttpService:JSONEncode({ embeds = { embed } })
         })
     end)
     
