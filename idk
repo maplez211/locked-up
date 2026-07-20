@@ -878,7 +878,6 @@ function grabItem(itemName)
     
     grabCooldown = true
     local originalPosition = hrp.CFrame
-    local gotTool = false
     
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -888,9 +887,16 @@ function grabItem(itemName)
         })
     end)
     
+    local bpBefore = player:FindFirstChild("Backpack")
+    local toolCountBefore = 0
+    if bpBefore then
+        toolCountBefore = #bpBefore:GetChildren()
+    end
+    local hasToolEquippedBefore = char:FindFirstChildOfClass("Tool") ~= nil
+    
     local targetPos = getGrabPosition(model)
     
-    hrp.CFrame = targetPos
+    hrp.CFrame = targetPos + Vector3.new(0, 3, 0)
     task.wait(0.3)
     
     local pickup = model:FindFirstChild("ITEMPICKUP") or model:FindFirstChildOfClass("BasePart") or model
@@ -901,26 +907,27 @@ function grabItem(itemName)
     game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Interact"):InvokeServer(unpack(args))
     
     local startTime = tick()
+    local gotTool = false
+    
     repeat
         task.wait(0.1)
+        
         local bp = player:FindFirstChild("Backpack")
-        if bp then
-            for _, tool in ipairs(bp:GetChildren()) do
-                if tool:IsA("Tool") and tool.Name:lower():find(itemData.ItemName:lower(), 1, true) then
-                    gotTool = true
-                    break
-                end
-            end
+        if bp and #bp:GetChildren() > toolCountBefore then
+            gotTool = true
+            break
         end
-        if char:FindFirstChildOfClass("Tool") then
-            local tool = char:FindFirstChildOfClass("Tool")
-            if tool and tool.Name:lower():find(itemData.ItemName:lower(), 1, true) then
-                gotTool = true
-            end
+        
+        if not hasToolEquippedBefore and char:FindFirstChildOfClass("Tool") then
+            gotTool = true
+            break
         end
-    until gotTool or (tick() - startTime > 3)
+        
+        if tick() - startTime > 3 then
+            break
+        end
+    until false
     
-    task.wait(0.1)
     hrp.CFrame = originalPosition
     
     if gotTool then
@@ -935,7 +942,7 @@ function grabItem(itemName)
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Kayen's Panel",
-                Text = "Failed to grab " .. itemName .. "! Timeout.",
+                Text = "Failed to grab " .. itemName .. "! Try again.",
                 Duration = 4,
             })
         end)
