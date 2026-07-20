@@ -798,69 +798,23 @@ end)
 
 -- ============ ITEM GRAB SYSTEM ============
 local itemGrabs = {
-    ["Keycard"] = {
-        Positions = {CFrame.new(946, 68, 923)},
-        ItemName = "Key"
-    },
-    ["Medkit"] = {
-        Positions = {CFrame.new(1844, 156, 2697)},
-        ItemName = "Medkit"
-    },
-    ["Desert Eagle"] = {
-        Positions = {CFrame.new(1179.56, 213.5, 3306.94)},
-        ItemName = "Desert Eagle"
-    },
-    ["UZI"] = {
-        Positions = {
-            CFrame.new(1843, 157, 2695),
-            CFrame.new(1409.17, 66.57, 1572.93)  
-        },
-        ItemName = "UZI"
-    },
-    ["Scar"] = {
-        Positions = {CFrame.new(1458, 69, 1549)},
-        ItemName = "SCAR"
-    },
-    ["Remington 870"] = {
-        Positions = {CFrame.new(1568, 70, 1392)},
-        ItemName = "Remington 870"
-    },
-    ["M16"] = {
-        Positions = {CFrame.new(1398, 69, 1558)},
-        ItemName = "M16"
-    },
-    ["SVD"] = {
-        Positions = {CFrame.new(28, 138, 944)},
-        ItemName = "SVD"
-    },
-    ["AK-47"] = {
-        Positions = {CFrame.new(89, 152, 2475)},
-        ItemName = "AK-47"
-    },
-    ["DB"] = {
-        Positions = {CFrame.new(1185, 214, 3290)},
-        ItemName = "DB"
-    },
-    ["M82"] = {
-        Positions = {CFrame.new(1521, 186, 2731)},
-        ItemName = "M82"
-    },
-    ["AUG"] = {
-        Positions = {CFrame.new(2226, 156, 2696)},
-        ItemName = "AUG"
-    },
-    ["IA2"] = {
-        Positions = {CFrame.new(1881, 156, 2672)},
-        ItemName = "IA2"
-    },
-    ["M9"] = {
-        Positions = {CFrame.new(1843, 157, 2695)},
-        ItemName = "M9"
-    },
+    ["Keycard"] = {ItemName = "Key"},
+    ["Medkit"] = {ItemName = "Medkit"},
+    ["Desert Eagle"] = {ItemName = "Desert Eagle"},
+    ["UZI"] = {ItemName = "UZI"},
+    ["Scar"] = {ItemName = "SCAR"},
+    ["Remington 870"] = {ItemName = "Remington 870"},
+    ["M16"] = {ItemName = "M16"},
+    ["SVD"] = {ItemName = "SVD"},
+    ["AK-47"] = {ItemName = "AK-47"},
+    ["DB"] = {ItemName = "DB"},
+    ["M82"] = {ItemName = "M82"},
+    ["AUG"] = {ItemName = "AUG"},
+    ["IA2"] = {ItemName = "IA2"},
+    ["M9"] = {ItemName = "M9"},
 }
 
-
-local function findItemPickup(itemName)
+local function findItemModel(itemName)
     if itemPickupCache[itemName] then
         return itemPickupCache[itemName]
     end
@@ -869,20 +823,25 @@ local function findItemPickup(itemName)
     
     for _, model in ipairs(giver:GetChildren()) do
         if model.Name == itemName and model:IsA("Model") then
-            local pickup = model:FindFirstChild("ITEMPICKUP")
-            if pickup then
-                itemPickupCache[itemName] = pickup
-                return pickup
-            end
-            local part = model:FindFirstChildOfClass("BasePart")
-            if part then
-                itemPickupCache[itemName] = part
-                return part
-            end
+            itemPickupCache[itemName] = model
+            return model
         end
     end
     
     return nil
+end
+
+local function getGrabPosition(model)
+    local pickup = model:FindFirstChild("ITEMPICKUP")
+    if pickup and pickup:IsA("BasePart") then
+        return pickup.CFrame
+    end
+    local part = model:FindFirstChildOfClass("BasePart")
+    if part then
+        return part.CFrame
+    end
+    
+    return model:GetPivot()
 end
 
 function grabItem(itemName)
@@ -900,8 +859,8 @@ function grabItem(itemName)
     local itemData = itemGrabs[itemName]
     if not itemData then return end
     
-    local pickup = findItemPickup(itemData.ItemName)
-    if not pickup then
+    local model = findItemModel(itemData.ItemName)
+    if not model then
         pcall(function()
             game:GetService("StarterGui"):SetCore("SendNotification", {
                 Title = "Kayen's Panel",
@@ -919,6 +878,7 @@ function grabItem(itemName)
     
     grabCooldown = true
     local originalPosition = hrp.CFrame
+    local gotTool = false
     
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -928,53 +888,60 @@ function grabItem(itemName)
         })
     end)
     
-    for _, pos in ipairs(itemData.Positions) do
-        hrp.CFrame = pos
-        task.wait(0.3)
-        
-        local args = {
-            [1] = pickup,
-            [2] = "GetTool"
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Interact"):InvokeServer(unpack(args))
-        
-        local startTime = tick()
-        local gotTool = false
-        
-        repeat
-            task.wait(0.1)
-            local bp = player:FindFirstChild("Backpack")
-            if bp then
-                for _, tool in ipairs(bp:GetChildren()) do
-                    if tool:IsA("Tool") and tool.Name:lower():find(itemData.ItemName:lower(), 1, true) then
-                        gotTool = true
-                        break
-                    end
-                end
-            end
-            if char:FindFirstChildOfClass("Tool") then
-                local tool = char:FindFirstChildOfClass("Tool")
-                if tool.Name:lower():find(itemData.ItemName:lower(), 1, true) then
+    local targetPos = getGrabPosition(model)
+    
+    hrp.CFrame = targetPos
+    task.wait(0.3)
+    
+    local pickup = model:FindFirstChild("ITEMPICKUP") or model:FindFirstChildOfClass("BasePart") or model
+    local args = {
+        [1] = pickup,
+        [2] = "GetTool"
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("Events"):WaitForChild("Interact"):InvokeServer(unpack(args))
+    
+    local startTime = tick()
+    repeat
+        task.wait(0.1)
+        local bp = player:FindFirstChild("Backpack")
+        if bp then
+            for _, tool in ipairs(bp:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name:lower():find(itemData.ItemName:lower(), 1, true) then
                     gotTool = true
+                    break
                 end
             end
-        until gotTool or (tick() - startTime > 3)
-        
-        if not gotTool then
-            pcall(function()
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "Kayen's Panel",
-                    Text = "Failed to grab " .. itemName .. "! Timeout.",
-                    Duration = 4,
-                })
-            end)
         end
-    end
+        if char:FindFirstChildOfClass("Tool") then
+            local tool = char:FindFirstChildOfClass("Tool")
+            if tool and tool.Name:lower():find(itemData.ItemName:lower(), 1, true) then
+                gotTool = true
+            end
+        end
+    until gotTool or (tick() - startTime > 3)
     
     task.wait(0.1)
     hrp.CFrame = originalPosition
     
-    task.delay(5, function()
+    if gotTool then
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Kayen's Panel",
+                Text = "Successfully grabbed " .. itemName .. "!",
+                Duration = 3,
+            })
+        end)
+    else
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Kayen's Panel",
+                Text = "Failed to grab " .. itemName .. "! Timeout.",
+                Duration = 4,
+            })
+        end)
+    end
+    
+    task.delay(3, function()
         grabCooldown = false
     end)
 end
@@ -1006,7 +973,6 @@ local FOV_RAINBOW_ACTIVE = false
 local fovRainbowConnection = nil
 
 function setFOVColor(name)
-    -- Para o rainbow se estiver ativo
     if fovRainbowConnection then
         fovRainbowConnection:Disconnect()
         fovRainbowConnection = nil
