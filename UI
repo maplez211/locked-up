@@ -1,0 +1,635 @@
+-- UI Script Kayen's Panel | Locked Up Panel
+local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local Window = redzlib:MakeWindow({
+  Title = "Precision Hub | Locked Up",
+  SubTitle = "by 2knw | Version 0.2.5",
+  SaveFolder = "LockedUp_Hub"
+})
+
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://129533569136714", BackgroundTransparency = 1 },
+    Corner = { CornerRadius = UDim.new(35, 1) },
+})
+
+-- ============ TABS ============
+local MainTab = Window:MakeTab({"Main", "settings"})
+local AimbotTab = Window:MakeTab({"Aimbot", "crosshair"})
+local PlayersTab = Window:MakeTab({"Players", "user"})
+local VisualsTab = Window:MakeTab({"Visuals", "eye"})
+local TeleportsTab = Window:MakeTab({"Teleports", "map-pin"})
+local ItemsTab = Window:MakeTab({"Items", "shopping-bag"})
+local GunModsTab = Window:MakeTab({"Gun Mods", "keyboard"})
+
+Window:SelectTab(MainTab)
+
+-- ============ MAIN TAB ============
+MainTab:AddDiscordInvite({
+    Name = "Precision | LUK Clan",
+    Description = "Join our Clan Discord server for updates and support!",
+    Logo = "rbxassetid://131323899878199",
+    Invite = "https://discord.gg/rdQj6S3URn",  
+})
+
+local MainSection = MainTab:AddSection({"Player"})
+
+MainTab:AddSlider({
+  Name = "Spinbot",
+  Description = "Spins your character at the chosen speed.",
+  Min = 0,
+  Max = 250,
+  Increase = 1,
+  Default = 0,
+  Callback = function(Value)
+    SPINBOT_SPEED = Value
+  end
+})
+
+-- ============ PLAYERS TAB ============
+local PlayersSection = PlayersTab:AddSection({"Teleport to Player"})
+
+local playerOptions = {"Select a player..."}
+for _, plr in ipairs(Players:GetPlayers()) do
+    if plr ~= player then
+        table.insert(playerOptions, plr.Name)
+    end
+end
+
+local playerDropdown = PlayersTab:AddDropdown({
+    Name = "Teleport to Player",
+    Description = "Select a player to teleport to them",
+    Options = playerOptions,
+    Default = "Select a player...",
+    Callback = function(Value)
+        if Value == "Select a player..." then return end
+        local target = Players:FindFirstChild(Value)
+        if target and target.Character then
+            local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local c = player.Character
+                if c and c:FindFirstChild("HumanoidRootPart") then
+                    c.HumanoidRootPart.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 3, 0))
+                end
+            end
+        end
+    end
+})
+
+PlayersTab:AddButton({"Update Players List", function()
+    local options = {"Select a player..."}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player then
+            table.insert(options, plr.Name)
+        end
+    end
+    
+    pcall(function() playerDropdown:Destroy() end)
+    
+    playerDropdown = PlayersTab:AddDropdown({
+        Name = "Teleport to Player",
+        Description = "Select a player to teleport to them",
+        Options = options,
+        Default = "Select a player...",
+        Callback = function(Value)
+            if Value == "Select a player..." then return end
+            local target = Players:FindFirstChild(Value)
+            if target and target.Character then
+                local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local c = player.Character
+                    if c and c:FindFirstChild("HumanoidRootPart") then
+                        c.HumanoidRootPart.CFrame = CFrame.new(hrp.Position + Vector3.new(0, 3, 0))
+                    end
+                end
+            end
+        end
+    })
+end})
+
+-- ============ VIEW PLAYER SECTION ============
+local ViewSection = PlayersTab:AddSection({"View Player"})
+
+local viewPlayerOptions = {"Select a player..."}
+for _, plr in ipairs(Players:GetPlayers()) do
+    if plr ~= player then
+        table.insert(viewPlayerOptions, plr.Name)
+    end
+end
+
+local SPECTATE_PLAYER = nil
+local spectateConnection = nil
+
+local viewPlayerDropdown = PlayersTab:AddDropdown({
+    Name = "View Player",
+    Description = "Select a player to spectate",
+    Options = viewPlayerOptions,
+    Default = "Select a player...",
+    Callback = function(Value)
+        if Value == "Select a player..." then return end
+        SPECTATE_PLAYER = Value
+    end
+})
+
+PlayersTab:AddToggle({
+    Name = "Spectate Player",
+    Description = "Toggle to spectate the selected player",
+    Default = false,
+    Callback = function(v)
+        if v and SPECTATE_PLAYER then
+            local target = Players:FindFirstChild(SPECTATE_PLAYER)
+            if target and target.Character then
+                workspace.CurrentCamera.CameraSubject = target.Character:FindFirstChildOfClass("Humanoid")
+                spectateConnection = RunService.RenderStepped:Connect(function()
+                    if target and target.Character then
+                        local humanoid = target.Character:FindFirstChildOfClass("Humanoid")
+                        if humanoid and humanoid.Health > 0 then
+                            workspace.CurrentCamera.CameraSubject = humanoid
+                        end
+                    end
+                end)
+            end
+        else
+            if spectateConnection then
+                spectateConnection:Disconnect()
+                spectateConnection = nil
+            end
+            if player.Character then
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    workspace.CurrentCamera.CameraSubject = humanoid
+                end
+            end
+        end
+    end
+})
+
+PlayersTab:AddButton({"Update Players List", function()
+    local options = {"Select a player..."}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player then
+            table.insert(options, plr.Name)
+        end
+    end
+    
+    pcall(function() viewPlayerDropdown:Destroy() end)
+    
+    viewPlayerDropdown = PlayersTab:AddDropdown({
+        Name = "View Player",
+        Description = "Select a player to spectate",
+        Options = options,
+        Default = "Select a player...",
+        Callback = function(Value)
+            if Value == "Select a player..." then return end
+            SPECTATE_PLAYER = Value
+        end
+    })
+end})
+
+-- ============ AIMBOT TAB ============
+local AimbotSection = AimbotTab:AddSection({"Aimbot"})
+
+AimbotTab:AddToggle({
+  Name = "Aimbot",
+  Default = true,
+  Callback = function(v)
+    AIMBOT_ENABLED = v
+    if _G.fovCircle then _G.fovCircle.Visible = v end
+    if not v then game:GetService("UserInputService").MouseBehavior = Enum.MouseBehavior.Default end
+  end
+})
+
+AimbotTab:AddToggle({
+  Name = "Wanted Only",
+  Default = false,
+  Callback = function(v) WANTED_ONLY = v end
+})
+
+AimbotTab:AddToggle({
+  Name = "Ignore Forcefield",
+  Default = true,
+  Callback = function(v) IGNORE_FORCEFIELD = v end
+})
+
+AimbotTab:AddToggle({
+  Name = "Ignore Friends",
+  Default = true,
+  Callback = function(v) IGNORE_FRIENDS = v end
+})
+
+AimbotTab:AddToggle({
+  Name = "Ignore Inmates",
+  Default = false,
+  Callback = function(v) IGNORE_INMATES = v end
+})
+
+AimbotTab:AddToggle({
+  Name = "Ignore Guards",
+  Default = false,
+  Callback = function(v) IGNORE_GUARDS = v end
+})
+
+AimbotTab:AddToggle({
+  Name = "Ignore Criminals",
+  Default = false,
+  Callback = function(v) IGNORE_CRIMINALS = v end
+})
+
+AimbotTab:AddToggle({
+  Name = "Ignore Warden",
+  Default = false,
+  Callback = function(v) IGNORE_WARDEN = v end
+})
+
+-- ============ TARGET ON SECTION ============
+local TargetSection = AimbotTab:AddSection({"Target On"})
+
+local targetOptions = {"None"}
+for _, plr in ipairs(Players:GetPlayers()) do
+    if plr ~= player then
+        table.insert(targetOptions, plr.Name)
+    end
+end
+
+local targetDropdown = AimbotTab:AddDropdown({
+    Name = "Target On",
+    Description = "Select a player to target",
+    Options = targetOptions,
+    Default = "None",
+    Callback = function(Value)
+        if Value == "None" then
+            TARGET_ON_PLAYER = nil
+        else
+            TARGET_ON_PLAYER = Value
+        end
+    end
+})
+
+AimbotTab:AddButton({"Reset Target", function()
+    TARGET_ON_PLAYER = nil
+    pcall(function() targetDropdown:Destroy() end)
+    
+    local newOptions = {"None"}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player then
+            table.insert(newOptions, plr.Name)
+        end
+    end
+    
+    targetDropdown = AimbotTab:AddDropdown({
+        Name = "Target On",
+        Description = "Select a player to target",
+        Options = newOptions,
+        Default = "None",
+        Callback = function(Value)
+            if Value == "None" then
+                TARGET_ON_PLAYER = nil
+            else
+                TARGET_ON_PLAYER = Value
+            end
+        end
+    })
+end})
+
+AimbotTab:AddSlider({
+  Name = "Smooth",
+  Min = 1,
+  Max = 100,
+  Increase = 1,
+  Default = 80,
+  Callback = function(Value) SMOOTHNESS = Value / 100 end
+})
+
+AimbotTab:AddSlider({
+  Name = "Angle Offset",
+  Min = 0,
+  Max = 25,
+  Increase = 0.5,
+  Default = 10.5,
+  Callback = function(Value) AIM_ANGLE_OFFSET = Value end
+})
+
+local FOVSection = AimbotTab:AddSection({"FOV"})
+
+AimbotTab:AddDropdown({
+  Name = "FOV Color",
+  Description = "Choose the FOV circle color",
+  Options = {"Black", "Red", "Green", "Blue", "Yellow", "Purple", "Cyan", "Orange", "Pink", "White", "Rainbow"},
+  Default = "Black",
+  Callback = function(Value)
+    setFOVColor(Value)
+  end
+})
+
+AimbotTab:AddToggle({
+  Name = "Hide FOV Circle",
+  Default = false,
+  Callback = function(v)
+    HIDE_FOV_CIRCLE = v
+    if _G.toggleFOVCircle then
+      _G.toggleFOVCircle(v)
+    end
+  end
+})
+
+AimbotTab:AddSlider({
+  Name = "FOV Size",
+  Min = 30,
+  Max = 500,
+  Increase = 10,
+  Default = 100,
+  Callback = function(Value)
+    FOV_RADIUS = Value
+    if _G.fovCircle then _G.fovCircle.Size = UDim2.new(0, Value*2, 0, Value*2) end
+  end
+})
+
+-- ============ GUN MODS TAB ============
+local FirerateSection = GunModsTab:AddSection({"Weapons Modifications."})
+
+GunModsTab:AddSlider({
+  Name = "Firerate",
+  Description = "Changes weapon's firerate.",
+  Min = 0,
+  Max = 0.1,
+  Increase = 0.01,
+  Default = 0,
+  Callback = function(Value)
+    setGunMod("FireRate", Value)
+  end
+})
+
+GunModsTab:AddSlider({
+  Name = "Spread",
+  Description = "Changes weapon's spread.",
+  Min = 0,
+  Max = 250,
+  Increase = 1,
+  Default = 0,
+  Callback = function(Value)
+    setGunMod("Spread", Value)
+  end
+})
+
+GunModsTab:AddSlider({
+  Name = "Range",
+  Description = "Changes weapon's range.",
+  Min = 0,
+  Max = 1000,
+  Increase = 1,
+  Default = 0,
+  Callback = function(Value)
+    setGunMod("Range", Value)
+  end
+})
+
+GunModsTab:AddSlider({
+  Name = "MaxAmmo",
+  Description = "Changes weapon's max ammo.",
+  Min = 0,
+  Max = 10000,
+  Increase = 1,
+  Default = 0,
+  Callback = function(Value)
+    setGunMod("MaxAmmo", Value)
+  end
+})
+
+GunModsTab:AddSlider({
+  Name = "CurrentAmmo",
+  Description = "Changes weapon's current ammo.",
+  Min = 0,
+  Max = 10000,
+  Increase = 1,
+  Default = 0,
+  Callback = function(Value)
+    setGunMod("CurrentAmmo", Value)
+  end
+})
+
+GunModsTab:AddToggle({
+  Name = "AutoFire",
+  Description = "Enables automatic fire.",
+  Default = false,
+  Callback = function(Value)
+    setGunMod("AutoFire", Value)
+  end
+})
+
+-- ============ VISUALS TAB ============
+local VisualsSection = VisualsTab:AddSection({"Visual Options"})
+
+VisualsTab:AddToggle({
+  Name = "ESP",
+  Default = false,
+  Callback = function(v)
+    ESP_ENABLED = v
+    if _G.refreshESP then _G.refreshESP() end
+  end
+})
+
+VisualsTab:AddToggle({
+  Name = "Hide ESP Names",
+  Description = "Hides the names above players when ESP is active",
+  Default = false,
+  Callback = function(v)
+    ESP_NAMES_ENABLED = not v  
+    if _G.refreshESP then _G.refreshESP() end
+  end
+})
+
+VisualsTab:AddToggle({
+  Name = "Hide Tag",
+  Default = false,
+  Callback = function(v)
+    HIDE_TAG_ENABLED = v
+    updateTagVisibility()
+  end
+})
+
+local CustomizationSection = VisualsTab:AddSection({"Customization"})
+
+VisualsTab:AddToggle({
+  Name = "Remove Fog",
+  Description = "Removes the fog from the game",
+  Default = false,
+  Callback = function(v)
+    if v then
+        game:GetService("Lighting").FogEnd = 100000
+        game:GetService("Lighting").FogStart = 100000
+    else
+        game:GetService("Lighting").FogEnd = 5000
+        game:GetService("Lighting").FogStart = 0
+    end
+  end
+})
+
+VisualsTab:AddDropdown({
+  Name = "Fog Color",
+  Description = "Choose the fog color",
+  Options = {"Default", "Black", "Red", "Green", "Blue", "Yellow", "Purple", "Cyan", "Orange", "Pink", "White"},
+  Default = "Default",
+  Callback = function(Value)
+    setFogColor(Value)
+  end
+})
+
+VisualsTab:AddDropdown({
+  Name = "Skyboxes",
+  Description = "Choose your skybox",
+Options = {"None", "Gray Skybox", "2knw & Donk666 Skybox", "Snow Skybox", "Cartoon Skybox", "Lince Skybox", "Red Skybox", "Slam Skybox", "Green Eyeball Skybox", "LUK Skybox", "LUK Members Skybox"},
+  Default = "None",
+  Callback = function(Value)
+    setSkybox(Value)
+  end
+})
+
+VisualsTab:AddDropdown({
+  Name = "BulletColor",
+  Description = "Choose your bullet color",
+  Options = {"Default", "Red", "Green", "Blue", "Yellow", "Purple", "Cyan", "Orange", "Pink", "Black", "White", "Rainbow"},
+  Default = "Default",
+  Callback = function(Value)
+    setBulletColor(Value)
+  end
+})
+
+VisualsTab:AddDropdown({
+  Name = "Weapon Skins",
+  Description = "Choose your weapon skin",
+  Options = {"Default", "Magma", "White Neon", "Purple Emo", "Bat Style", "Creepy Eyes", "Purple Pattern", "Trippy", "Rainbow", "Red Pattern", "Bizarre Force", "Golden"},
+  Default = "Default",
+  Callback = function(Value)
+    setWeaponSkin(Value)
+  end
+})
+
+VisualsTab:AddDropdown({
+  Name = "Shot Sound",
+  Description = "Choose your weapon shot sound",
+  Options = {"Default", "CS 1.6 AK-47", "Shine Shot", "Electric Shot", "FAHH", "Bow Shot", "Laser Shot", "Pew", "Meow", "Silenced Shot", "M16 Shot"},
+  Default = "Default",
+  Callback = function(Value)
+    setShotSound(Value)
+  end
+})
+
+-- ============ ITEMS TAB ============
+local ItemsSection = ItemsTab:AddSection({"Items"})
+
+ItemsTab:AddButton({"Keycard", function()
+    _G.grabItem("Keycard")
+end})
+
+ItemsTab:AddButton({"Medkit", function()
+    _G.grabItem("Medkit")
+end})
+
+local WeaponsSection = ItemsTab:AddSection({"Weapons"})
+
+ItemsTab:AddButton({"Desert Eagle", function()
+    _G.grabItem("Desert Eagle")
+end})
+
+ItemsTab:AddButton({"UZI", function()
+    _G.grabItem("UZI")
+end})
+
+ItemsTab:AddButton({"Scar", function()
+    _G.grabItem("Scar")
+end})
+
+ItemsTab:AddButton({"Remington 870", function()
+    _G.grabItem("Remington 870")
+end})
+
+ItemsTab:AddButton({"M16", function()
+    _G.grabItem("M16")
+end})
+
+ItemsTab:AddButton({"SVD", function()
+    _G.grabItem("SVD")
+end})
+
+ItemsTab:AddButton({"AK-47", function()
+    _G.grabItem("AK-47")
+end})
+
+ItemsTab:AddButton({"DB", function()
+    _G.grabItem("DB")
+end})
+
+ItemsTab:AddButton({"M82", function()
+    _G.grabItem("M82")
+end})
+
+ItemsTab:AddButton({"AUG", function()
+    _G.grabItem("AUG")
+end})
+
+ItemsTab:AddButton({"IA2", function()
+    _G.grabItem("IA2")
+end})
+
+ItemsTab:AddButton({"M9", function()
+    _G.grabItem("M9")
+end})
+
+-- ============ TELEPORTS TAB ============
+local TeleportsSection = TeleportsTab:AddSection({"Teleports"})
+
+local teleports = {
+  {"Escape the Prison", Vector3.new(2025, 95, 2763)},
+  {"Admin Room", Vector3.new(825, 127, 3762)},
+  {"Nexus 1", Vector3.new(1894, 156, 2822)},
+  {"Nexus 2", Vector3.new(1993, 155, 2669)},
+  {"Cells 1", Vector3.new(1942, 156, 2844)},
+  {"Cells 2", Vector3.new(1942, 192, 2713)},
+  {"Stairs", Vector3.new(2014, 180, 2831)},
+  {"Chairs Room", Vector3.new(2033, 156, 2738)},
+  {"Crafting", Vector3.new(1976, 156, 2822)},
+  {"Cafeteria", Vector3.new(1958, 156, 2684)},
+  {"Kitchen", Vector3.new(1895, 158, 2659)},
+  {"Armory 1 (Prison)", Vector3.new(1841, 165, 2674)},
+  {"Armory 2 (Prison)", Vector3.new(2236, 165, 2719)},
+  {"Break Room 1", Vector3.new(1820, 156, 2688)},
+  {"Break Room 2", Vector3.new(1801, 156, 2654)},
+  {"Warden Room", Vector3.new(1700, 156, 2810)},
+  {"Front Entrance", Vector3.new(1682, 156, 2693)},
+  {"Roof", Vector3.new(1794, 180, 2789)},
+  {"Prison Tower 1 (M82)", Vector3.new(1531, 186, 2731)},
+  {"Prison Tower 2", Vector3.new(1849, 186, 3006)},
+  {"Front Yard", Vector3.new(1848, 154, 2897)},
+  {"Back Yard", Vector3.new(2051, 154, 2844)},
+  {"Sewage", Vector3.new(1944, 136, 2557)},
+  {"Hall 1", Vector3.new(2259, 155, 2685)},
+  {"Back Entrance", Vector3.new(2363, 155, 2718)},
+  {"Lootboxes Area", Vector3.new(2325, 156, 2908)},
+  {"Criminal Base 1", Vector3.new(77, 168, 2455)},
+  {"Criminal Base 2", Vector3.new(57, 135, 870)},
+  {"Criminal Base 3", Vector3.new(1589, 76, 1369)},
+  {"Armory (City)", Vector3.new(1449, 67, 1530)},
+  {"Statue", Vector3.new(654, 98, 1474)},
+  {"Neighbourhood", Vector3.new(872, 67, 955)},
+  {"Metro Station", Vector3.new(214, 87, 1619)},
+  {"Wood House", Vector3.new(1173, 213, 3309)},
+  {"Beach", Vector3.new(-189, 115, 1762)},
+  {"Bell Tower", Vector3.new(762, 173, 2307)},
+  {"Empty Grocery", Vector3.new(503, 110, 2085)},
+  {"Empty Building", Vector3.new(768, 110, 2398)},
+  {"Gym", Vector3.new(247, 110, 1729)},
+  {"Walpark", Vector3.new(397, 110, 1931)},
+  {"Motel", Vector3.new(206, 142, 989)},
+  {"Keycard House", Vector3.new(937, 68, 910)},
+}
+
+for _, tp in ipairs(teleports) do
+  TeleportsTab:AddButton({tp[1], function()
+    local c = player.Character
+    if c and c:FindFirstChild("HumanoidRootPart") then
+      c.HumanoidRootPart.CFrame = CFrame.new(tp[2])
+    end
+  end})
+end
