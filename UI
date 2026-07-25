@@ -1,4 +1,4 @@
--- UI Script Kayen's Panel | Locked Up Panel
+-- UI Script Precision | Locked Up
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/minhdepzai-v/LibraryRobloc/refs/heads/main/RedzLibrary.lua"))()
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -7,7 +7,7 @@ local RunService = game:GetService("RunService")
 local Window = redzlib:MakeWindow({
   Title = "Precision Hub | Locked Up",
   SubTitle = "by 2knw | Version 0.2.5",
-  SaveFolder = "LockedUp_Hub"
+  SaveFolder = "PrecisionLockedUp"
 })
 
 Window:AddMinimizeButton({
